@@ -24,23 +24,18 @@ __version__ = '3.3'
 
 import os
 import sys
-import cStringIO
-import sys, tty, termios
+import urwid
 
-
+DEBUG = False
 WINDOWS = os.name == 'nt'
-PY3K = sys.version_info >= (3,)
-
-# Windows constants
-# http://msdn.microsoft.com/en-us/library/ms683231%28v=VS.85%29.aspx
 
 STD_INPUT_HANDLE  = -10
 STD_OUTPUT_HANDLE = -11
 STD_ERROR_HANDLE  = -12
 
-DEBUG = False
-
-# --- console/window operations ---
+def debug(msg):
+    if DEBUG:
+        print(msg)
 
 if WINDOWS:
     # get console handle
@@ -68,7 +63,6 @@ if WINDOWS:
                     ("srWindow", SMALL_RECT),
                     ("dwMaximumWindowSize", DWORD)]
 
-
 def _windows_get_window_size():
     """Return (width, height) of available window area on Windows.
        (0, 0) if no console is allocated.
@@ -79,6 +73,7 @@ def _windows_get_window_size():
         return (0, 0)
     return (sbi.srWindow.Right - sbi.srWindow.Left + 1,
             sbi.srWindow.Bottom - sbi.srWindow.Top + 1)
+
 
 def _posix_get_window_size():
     """Return (width, height) of console terminal on POSIX system.
@@ -114,7 +109,6 @@ def getwidth():
     Return width of available window in characters.  If detection fails,
     return value of standard width 80.  Coordinate of the last character
     on a line is -1 from returned value. 
-
     Windows part uses console API through ctypes module.
     *nix part uses termios ioctl TIOCGWINSZ call.
     """
@@ -133,7 +127,6 @@ def getheight():
     """
     Return available window height in characters or 25 if detection fails.
     Coordinate of the last line is -1 from returned value. 
-
     Windows part uses console API through ctypes module.
     *nix part uses termios ioctl TIOCGWINSZ call.
     """
@@ -149,178 +142,90 @@ def getheight():
     return height or 25
 
 
-# --- keyboard input operations and constants ---
-# constants for getch() (these end with _)
-
-if WINDOWS:
-    ENTER_ = '\x0d'
-    CTRL_C_ = '\x03'
-else:
-    ENTER_ = '\n'
-    # [ ] check CTRL_C_ on Linux
-    CTRL_C_ = None
-ESC_ = '\x1b'
-
-# other constants with getchars()
-if WINDOWS:
-    LEFT =  ['\xe0', 'K']
-    UP =    ['\xe0', 'H']
-    RIGHT = ['\xe0', 'M']
-    DOWN =  ['\xe0', 'P']
-else:
-    LEFT =  ['\x1b', '[', 'D']
-    UP =    ['\x1b', '[', 'A']
-    RIGHT = ['\x1b', '[', 'C']
-    DOWN =  ['\x1b', '[', 'B']
-ENTER = [ENTER_]
-ESC  = [ESC_]
-
-def dumpkey(key):
-    """
-    Helper to convert result of `getch` (string) or `getchars` (list)
-    to hex string.
-    """
-    def hex3fy(key):
-        """Helper to convert string into hex string (Python 3 compatible)"""
-        from binascii import hexlify
-        # Python 3 strings are no longer binary, encode them for hexlify()
-        if PY3K:
-           key = key.encode('utf-8')
-        keyhex = hexlify(key).upper()
-        if PY3K:
-           keyhex = keyhex.decode('utf-8')
-        return keyhex
-    if type(key) == str:
-        return hex3fy(key)
-    else:
-        return ' '.join( [hex3fy(s) for s in key] )
-
-
-if WINDOWS:
-    if PY3K:
-        from msvcrt import kbhit, getwch as __getchw
-    else:
-        from msvcrt import kbhit, getch as __getchw
-
-def debug(msg):
-    if DEBUG:
-        print(msg)
-
-def _getch_windows(_getall=False):
-    chars = [__getchw()]  # wait for the keypress
-    if _getall:           # read everything, return list
-        while kbhit():
-            chars.append(__getchw())
-        return chars
-    else:
-        return chars[0]
-
-
-def _getch_unix(_getall=False):
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-    tty.setraw(sys.stdin.fileno())
-    try:
-        if _getall:
-            ch = sys.stdin.read(1)
-            if ch == UP[0]:
-                ch = [ch,  sys.stdin.read(1),  sys.stdin.read(1)]
-            debug('got %s' % (ch))
-        else:
-            ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-    return ch
-
-# choose correct getch function at module import time
-if WINDOWS:
-    getch = _getch_windows
-else:
-    getch = _getch_unix
-
-getch.__doc__ = \
-    """
-    Wait for keypress, return first char generated as a result.
-
-    Arrows and special keys generate sequence of chars. Use `getchars`
-    function to receive all chars generated or present in buffer.
-    """
-
-    # check that Ctrl-C and Ctrl-Break break this function
-    #
-    # Ctrl-C       [n] Windows  [y] Linux  [ ] OSX
-    # Ctrl-Break   [y] Windows  [n] Linux  [ ] OSX
-
-
-# [ ] check if getchars returns chars already present in buffer
-#     before the call to this function
-def getchars():
-    """
-    Wait for keypress. Return list of chars generated as a result.
-    More than one char in result list is returned when arrows and
-    special keys are pressed. Returned sequences differ between
-    platforms, so use constants defined in this module to guess
-    correct keys.
-    """
-    return getch(_getall=True)
-    
-
-def echo(msg):
-    """
-    Print msg to the screen without linefeed and flush the output.
-    
-    Standard print() function doesn't flush, see:
-    https://groups.google.com/forum/#!topic/python-ideas/8vLtBO4rzBU
-    """
-    sys.stdout.write(msg)
-    sys.stdout.flush()
-
 
 def build_offsets(fi):
-  offsets = []
-  offset = 0
-  original = fi.tell()
-  for line in fi:
-      offsets.append(offset)
-      offset += len(line)
-  fi.seek(original)
-  return offsets 
+    offsets = []
+    offset = 0
+    original = fi.tell()
+    for line in fi:
+        offsets.append(offset)
+        offset += len(line)
+    fi.seek(original)
+    return offsets 
+
+focus_map = {
+    'heading': 'focus heading',
+    'options': 'focus options',
+    'line': 'focus line'}
+
+class HorizontalBoxes(urwid.Columns):
+    def __init__(self):
+        super(HorizontalBoxes, self).__init__([], dividechars=1)
+
+    def open_box(self, box):
+        if self.contents:
+            del self.contents[self.focus_position + 1:]
+        self.contents.append((urwid.AttrMap(box, 'options', focus_map),
+            self.options('given', 24)))
+        self.focus_position = len(self.contents) - 1
+
+class Pager():
+
+    def __init__(self, fi):
+        self.fi = fi
+        self.marker = 0
+        self.offsets = build_offsets(fi)
+        self.txt = urwid.Text(self.get_page(self.fi, self.offsets, self.marker))
+        self.fill = urwid.Filler(self.txt, 'top')
+
+    def handle_input(self, key):
+        if isinstance(key, str):
+            if key.lower() == 'q':
+                raise urwid.ExitMainLoop()
+            if key == 'up' and self.marker >  0:
+                self.marker -= 1
+            if key == 'down' and self.marker < (len(self.offsets) - getheight()):
+                self.marker += 1
+            if key == 'page up':
+                # don't try to go up beyond start
+                self.marker = max(0, self.marker - getheight())
+            if key == 'page down':
+                # don't try to go down beyond end
+                self.marker = min(len(self.offsets) - getheight(), self.marker + getheight())
+            if key == 'home':
+                self.marker = 0
+            if key == 'end':
+                self.marker = len(self.offsets) - getheight()
+            
+        self.txt.set_text(self.get_page(self.fi, self.offsets, self.marker))
+
+    def get_page(self, fi, offsets, marker):
+
+        """
+        """
+        debug('-------- MARKER %s -----------' % marker)
+        
+        lines = []
+	height = getheight()
+        fi.seek(offsets[marker])
+        end = marker + height
+        while marker < (end):
+            line = fi.readline() #.rstrip("\n\r")
+            if not DEBUG:
+                lines.append(line)
+            marker += 1
+        debug("Printed %s lines" % marker)
+        return lines
+
+    def run(self):
+        loop = urwid.MainLoop(self.fill, unhandled_input=self.handle_input)
+        loop.run()
+
 
 def main(fi):
+    pager = Pager(fi)
+    pager.run()
 
-    marker = 0
-    offsets = build_offsets(fi)
-    while True:
-       page(fi, offsets, marker)
-       char = getchars()
-       if (char == UP and marker > 0):
-           #print("UP")
-           marker -= 1
-       if (char == DOWN and marker < getheight()):
-           #print("DOWN")
-           marker += 1 
-       if (char == 'q'):
-           sys.exit()
-
-def page(fi, offsets, marker=0):
-    """
-    """
-    width = getwidth()
-    height = getheight()
-
-    debug('-------- MARKER %s -----------' % marker)
-
-    debug("starting @ %s" % marker)
-    fi.seek(offsets[marker])
-    end = marker + height
-    while marker < (end):
-        line = fi.readline() #.rstrip("\n\r")
-        if not DEBUG:
-            print(line, end='')
-            sys.stdout.flush()
-        marker += 1
-    debug("Printed %s lines" % marker)
-    return
 
 if __name__ == '__main__':
     # check if pager.py is running in interactive mode

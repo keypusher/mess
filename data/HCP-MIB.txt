@@ -1,0 +1,3240 @@
+-- MIB Specification for the Hitachi Content Platform HCP v6.0
+-- Revised: March 1, 2013
+--
+-- ************************************************************************
+-- Notice Statement:
+--
+-- Copyright, Hitachi, Ltd., Hitachi Data Systems Corporation, 2013.
+-- All rights reserved.
+--
+-- This document contains information which is owned by and proprietary to
+-- Hitachi, Ltd. and Hitachi Data Systems Corporation.  End users, resellers,
+-- distributors and other authorized parties are granted a non-exclusive
+-- license to:
+--
+--              Use this document solely in connection with the management of
+--              Hitachi, Ltd. and Hitachi Data Systems products;  and
+--
+--              Reproduce this document in conjunction with such licensed use on the
+--              strict conditions that (a) this Notice Statement is included in its
+--              entirety in all such reproductions and (b) the document is reproduced
+--              unchanged and in its entirety.
+--
+-- This license terminates immediately and without notice on the violation of
+-- any of the terms of this Notice Statement.
+--
+-- THIS DOCUMENT IS PROVIDED "AS IS" WITHOUT ANY WARRANTY OF ANY KIND, EXPRESS
+-- OR IMPLIED, INCLUDING, WITHOUT LIMITATION, THE IMPLIED WARRANTIES OF
+-- MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE OR NON-INFRINGEMENT.
+--
+-- USERS OF THIS DOCUMENT ARE SOLELY RESPONSIBLE FOR ITS USE AND ANY RESULTS,
+-- DIRECT OR INDIRECT, OF SUCH USE.  HITACHI, LTD. AND HITACHI DATA SYSTEMS
+-- DISCLAIM ANY LIABILITY FOR ANY DAMAGES, DIRECT, INDIRECT, INCIDENTAL,
+-- CONSEQUENTIAL OR OTHERWISE RESULTING, DIRECTLY OR INDIRECTLY, FROM USE OF
+-- THE INFORMATION IN THIS DOCUMENT.
+--
+-- This document may contain technical or editorial errors or omissions.
+-- Hitachi, Ltd. and Hitachi Data Systems disclaim any liability for such
+-- errors or omissions.
+--
+-- This document is subject to change without notice.
+--
+-- Not all product features described in this document may be currently
+-- available.  Contact your local Hitachi Data Systems sales office for
+-- information on feature and product availability.
+-- ************************************************************************
+--
+
+HCP-MIB DEFINITIONS ::= BEGIN
+
+IMPORTS
+    DisplayString, TEXTUAL-CONVENTION
+        FROM SNMPv2-TC
+    MODULE-IDENTITY, OBJECT-TYPE, NOTIFICATION-TYPE, Counter64, enterprises, IpAddress, Integer32
+        FROM SNMPv2-SMI
+    MODULE-COMPLIANCE, OBJECT-GROUP, NOTIFICATION-GROUP
+        FROM SNMPv2-CONF;
+
+hcpMIB MODULE-IDENTITY
+    LAST-UPDATED "201303010000Z"        -- March 1, 2013 (GA 6.0.0)
+    ORGANIZATION "Hitachi Data Systems"
+    CONTACT-INFO
+            "Postal: Hitachi Data Systems
+                     610 Lincoln St
+                     Waltham MA, 02451
+                     USA
+             Phone:  781-810-6000
+             Web:    www.hds.com"
+    DESCRIPTION
+            "The MIB module for managing HCP."
+
+    REVISION "201303010000Z"            -- March 1, 2013 (GA 6.0.0)
+    DESCRIPTION
+            "Added new features for the 6.0.0 release:
+              - Added tenant management/data networks
+              - Added BBU type
+              - Added NIC degraded
+              - Added network management enabled
+              - Added replication link network
+            "
+
+    REVISION "201204250000Z"            -- April 31, 2012 (GA 5.0.1)
+    DESCRIPTION
+            "Added new features for the 5.0.1 release:
+               - Percent of time spun down for the past week, the past month and the the past six months
+               - Added a disabled state for services.
+               - Added disposition service status and last update time
+               - Changed the replication metrics to be cached metrics
+            "
+
+    REVISION "201203310000Z"            -- March 31, 2012 (GA 5.0.0)
+    DESCRIPTION
+            "Added new features for the 5.0 release:
+               - Storage Tiering service group
+               - Backend Switch status
+               - unavailable object indicator
+               - irreparable object indicator
+               - current size of the metadata index.
+               - Active Directory status
+               - Tenant authentication schemes
+               - Spindown usage and total capacity
+               - MQE Search Settings
+               - HCP Search Facility Settings
+               - Syslog facility to which log messages are directed
+               - Volume features
+             Properties changed for the 5.0 release:
+               - enabledSearchConsole and queryingEnabledSearch are now read-only properties
+               - compressionRate is now a deprecated property
+               - identifyUnavailableObjectsDpl1UnavailableNode is now a deprecated property"
+
+    REVISION "201102220000Z"            -- February 22, 2011 (GA 4.1.0)
+    DESCRIPTION
+            "Added new features for the 4.1 release:
+               - searchFacility property
+               - an entry indicating each node's hardware type
+               - a listing of each tenant's namespace quota
+               - information for nodes BBU devices"
+
+    REVISION "201006180000Z"            -- June 18th, 2010 (GA 4.0.0)
+    DESCRIPTION
+            "Added new features for the 4.0 release:
+               - NIC failure
+               - SAN path status
+               - storage type
+               - replicationEnabled and searchEnabled fields
+               - system-level field that indicates that whether current system DPL setting is unsafe
+               - tenant-level field that indicates that whether the tenant contains any namespaces with an unsafe DPL
+               - replicationLinkObjectsToBeReplicated and replicationLinkBytesToBeReplicated fields within the replication link section
+               - contentVerificationRepairMode allows users to modify the repair mode
+               - identifyUnavailableObjectsDpl1UnavailableNode allows user to configure the behavior when there is a node down and DPL is 1"
+
+   ::= { hcp 1000 }
+
+
+DateTime       ::= TEXTUAL-CONVENTION
+   DISPLAY-HINT "25a"
+   STATUS       current
+   DESCRIPTION  "Date and time as formatted by the libc ctime() function."
+   SYNTAX       OCTET STRING (SIZE (0..25))
+
+LongDisplayString ::= TEXTUAL-CONVENTION
+   DISPLAY-HINT "1024a"
+   STATUS       current
+   DESCRIPTION  "Definition of sized string type."
+   SYNTAX       OCTET STRING (SIZE (0..1024))
+
+
+-- .iso(1).org(3).dod(6).internet(1).private(4).enterprises(1).hitachi(116).systemExMib(5).hcp(46)
+
+hitachi               OBJECT IDENTIFIER ::= { enterprises 116 }
+systemExMib           OBJECT IDENTIFIER ::= { hitachi 5 }
+hcp                   OBJECT IDENTIFIER ::= { systemExMib 46 }
+
+
+hcpNotifications      OBJECT IDENTIFIER ::= { hcp 0 }     -- Traps
+hcpNodes              OBJECT IDENTIFIER ::= { hcp 1 }
+hcpStorage            OBJECT IDENTIFIER ::= { hcp 2 }
+hcpSystem             OBJECT IDENTIFIER ::= { hcp 3 }
+hcpTenants            OBJECT IDENTIFIER ::= { hcp 4 }
+hcpServices           OBJECT IDENTIFIER ::= { hcp 5 }
+hcpSecurity           OBJECT IDENTIFIER ::= { hcp 6 }
+hcpMonitoring         OBJECT IDENTIFIER ::= { hcp 7 }
+hcpBackEndSwitches    OBJECT IDENTIFIER ::= { hcp 8 }
+
+
+
+---------------------------------------------------------------------------------------
+--
+-- HCP Nodes: table of nodes in this system
+--
+---------------------------------------------------------------------------------------
+
+hcpNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of nodes in the HCP system."
+       ::= { hcpNodes 1 }
+
+-- node table row declaration
+hcpNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Information about each node."
+       INDEX { nodeNumber }
+       ::= { hcpNodeTable 1 }
+
+-- node table row syntax
+HcpNodeTableEntry ::=
+       SEQUENCE {
+           nodeNumber          Integer32,
+           nodeIP              IpAddress,
+           nodeUsage           Counter64,
+           nodeAvailability    Counter64,
+           nodeCapacity        Counter64,
+           nodeBootTime        DateTime,
+           nodeStatus          INTEGER,
+           nodeRestart         Integer32,
+           nodeShutdown        Integer32,
+           nodeType            INTEGER,
+           nodeNicFailure      INTEGER,
+           nodeSANStatus       INTEGER,
+           nodeHardwareType    DisplayString,
+           nodeNicDegraded     INTEGER
+       }
+
+-- node table row definition
+nodeNumber OBJECT-TYPE
+       SYNTAX       Integer32(1 .. 2147483647)
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Permanent ID for the node.
+         (System Management Console:  Nodes)"
+       ::= { hcpNodeTableEntry 1 }
+
+nodeIP OBJECT-TYPE
+       SYNTAX       IpAddress
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IP address of the node.
+         (System Management Console:  Nodes > [nodeNumber] > Core hardware)"
+       ::= { hcpNodeTableEntry 2 }
+
+nodeUsage OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total amount of used space on all the logical volumes managed by the
+          node, in bytes.
+         (System Management Console:  Nodes > [nodeNumber] > Logical volume usage)"
+       ::= { hcpNodeTableEntry 3 }
+
+nodeAvailability OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total amount of unused space on all the logical volumes managed by the
+          node, in bytes."
+       ::= { hcpNodeTableEntry 4 }
+
+nodeCapacity OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total amount of storage space on all the logical volumes managed by the
+          node, in bytes.
+         (System Management Console:  Nodes)"
+       ::= { hcpNodeTableEntry 5 }
+
+nodeBootTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the node last started.
+         (System Management Console:  Nodes > [nodeNumber] > Core hardware)"
+       ::= { hcpNodeTableEntry 6 }
+
+nodeStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   unavailable(0),
+                   available(4)
+                 }
+       MAX-ACCESS    read-only
+       STATUS    current
+       DESCRIPTION
+         "Current status of the node.
+         (System Management Console:  Nodes)"
+       ::= { hcpNodeTableEntry 7 }
+
+nodeRestart OBJECT-TYPE
+       SYNTAX       Integer32
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+         "Restarts the node when set to any non-zero value.
+         (System Management Console:  Nodes > [nodeNumber] > Restart Node)"
+       ::= { hcpNodeTableEntry 8 }
+
+nodeShutdown OBJECT-TYPE
+       SYNTAX       Integer32
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+         "Shuts down the node when set to any non-zero value.
+         (System Management Console:  Nodes > [nodeNumber] > Shut Down Node)"
+       ::= { hcpNodeTableEntry 9 }
+
+nodeType OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   storage(1),
+                   search(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Type of node:  storage (1) or search (2).
+         (System Management Console:  Nodes)"
+       ::= { hcpNodeTableEntry 10 }
+
+nodeNicFailure OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the node has a failed NIC.
+         (System Management Console:  Nodes > [nodeNumber] > Network interfaces)"
+       ::= { hcpNodeTableEntry 11 }
+
+nodeSANStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   error(0),
+                   rain(1),
+                   sanWithoutMultipath(2),
+                   sanGood(3),
+                   sanDegradedToOne(4)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of the status of the SAN path.
+         (System Management Console:  Nodes > [nodeNumber] > Multipath)"
+       ::= { hcpNodeTableEntry 12 }
+
+nodeHardwareType OBJECT-TYPE
+        SYNTAX    DisplayString
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+          "Type of hardware used for the node.
+           (System Management Console:  Nodes > [nodeNumber] > Core Hardware)"
+        ::= { hcpNodeTableEntry 13 }
+
+nodeNicDegraded OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+          "Indication of whether (1) or not (2) the node has a degraded NIC.
+           (System Management Console:  Nodes > [nodeNumber] > Network interfaces)"
+        ::= { hcpNodeTableEntry 14 }
+
+---------------------------------------------------------------------------------------
+-- IPMI --
+---------------------------------------------------------------------------------------
+
+--- IPMI Temperature Readings --
+hcpIpmiTemperatureNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpIpmiTemperatureNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of IPMI temperature readings for each node in the HCP system."
+       ::= { hcpNodes 2 }
+
+-- node ipmi temperature table row declaration
+hcpIpmiTemperatureNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpIpmiTemperatureNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "IPMI temperature reading for a device in a node."
+       INDEX { nodeNumber }
+       ::= { hcpIpmiTemperatureNodeTable 1 }
+
+-- node ipmi temperature table row syntax
+HcpIpmiTemperatureNodeTableEntry ::=
+       SEQUENCE {
+           ipmiTemperatureName                    DisplayString,
+           ipmiTemperatureDetailedStatus          DisplayString
+       }
+
+-- node ipmi temperature table row definition
+ipmiTemperatureName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Name of the device whose IPMI temperature reading is being reported.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiTemperatureNodeTableEntry 1 }
+
+-- node ipmi temperature table row definition
+ipmiTemperatureDetailedStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IPMI temperature reading for the device.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiTemperatureNodeTableEntry 2 }
+
+--- IPMI Power Supply Readings --
+hcpIpmiPowerSupplyNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpIpmiPowerSupplyNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of IPMI power supply readings for each node in the HCP system."
+       ::= { hcpNodes 3 }
+
+-- node ipmi power supply table row declaration
+hcpIpmiPowerSupplyNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpIpmiPowerSupplyNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "IPMI reading for a power supply in a node."
+       INDEX { nodeNumber }
+       ::= { hcpIpmiPowerSupplyNodeTable 1 }
+
+-- node ipmi power supply table row syntax
+HcpIpmiPowerSupplyNodeTableEntry ::=
+       SEQUENCE {
+           ipmiPowerSupplyName                    DisplayString,
+           ipmiPowerSupplyDetailedStatus          DisplayString
+       }
+
+-- node ipmi power supply table row definition
+ipmiPowerSupplyName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Name of the power supply whose IPMI reading is being reported.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiPowerSupplyNodeTableEntry 1 }
+
+-- node ipmi power supply table row definition
+ipmiPowerSupplyDetailedStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IPMI reading for the power supply.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiPowerSupplyNodeTableEntry 2 }
+
+--- IPMI Fan Readings --
+hcpIpmiFanNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpIpmiFanNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of IPMI fan readings for each node in the HCP system."
+       ::= { hcpNodes 4 }
+
+-- node ipmi fan table row declaration
+hcpIpmiFanNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpIpmiFanNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "IPMI reading for a fan in a node."
+       INDEX { nodeNumber }
+       ::= { hcpIpmiFanNodeTable 1 }
+
+-- node ipmi fan table row syntax
+HcpIpmiFanNodeTableEntry ::=
+       SEQUENCE {
+           ipmiFanName                    DisplayString,
+           ipmiFanDetailedStatus          DisplayString
+       }
+
+-- node ipmi fan table row definition
+ipmiFanName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Name of the fan whose IPMI reading is being reported.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiFanNodeTableEntry 1 }
+
+-- node ipmi fan table row definition
+ipmiFanDetailedStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IPMI reading for the fan.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiFanNodeTableEntry 2 }       
+
+--- IPMI Processor Readings --
+hcpIpmiProcessorNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpIpmiProcessorNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of IPMI processor readings for each node in the HCP system."
+       ::= { hcpNodes 5 }
+
+-- node ipmi processor table row declaration
+hcpIpmiProcessorNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpIpmiProcessorNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "IPMI reading for a processor in a node."
+       INDEX { nodeNumber }
+       ::= { hcpIpmiProcessorNodeTable 1 }
+
+-- node ipmi processor table row syntax
+HcpIpmiProcessorNodeTableEntry ::=
+       SEQUENCE {
+           ipmiProcessorName                    DisplayString,
+           ipmiProcessorDetailedStatus          DisplayString
+       }
+
+-- node ipmi processor table row definition
+ipmiProcessorName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Name of the processor whose IPMI reading is being reported.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiProcessorNodeTableEntry 1 }
+
+-- node ipmi processor table row definition
+ipmiProcessorDetailedStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IPMI reading for the processor.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiProcessorNodeTableEntry 2 }
+
+--- IPMI Voltage Readings --
+hcpIpmiVoltageNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpIpmiVoltageNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of IPMI voltage readings for each node in the HCP system."
+       ::= { hcpNodes 6 }
+
+-- node ipmi voltage table row declaration
+hcpIpmiVoltageNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpIpmiVoltageNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "IPMI voltage readings for a node."
+       INDEX { nodeNumber }
+       ::= { hcpIpmiVoltageNodeTable 1 }
+
+-- node ipmi voltage table row syntax
+HcpIpmiVoltageNodeTableEntry ::=
+       SEQUENCE {
+           ipmiVoltageName                    DisplayString,
+           ipmiVoltageDetailedStatus          DisplayString
+       }
+
+-- node ipmi voltage table row definition
+ipmiVoltageName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Name of the device whose IPMI voltage reading is being reported.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiVoltageNodeTableEntry 1 }
+
+-- node ipmi voltage table row definition
+ipmiVoltageDetailedStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IPMI voltage reading for the device.
+         (System Management Console:  Nodes > [nodeNumber] > IPMI)"
+       ::= { hcpIpmiVoltageNodeTableEntry 2 }
+       
+hcpBBUNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpBBUNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of BBU readings for each node in the HCP system."
+       ::= { hcpNodes 7 }
+
+-- node bbu table row declaration
+hcpBBUNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpBBUNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Sensor reading for a BBU in a node."
+       INDEX { nodeNumber }
+       ::= { hcpBBUNodeTable 1 }
+
+-- node bbu table row syntax
+HcpBBUNodeTableEntry ::=
+       SEQUENCE {
+           bbuBroken                  DisplayString,
+           bbuDiagnostics             DisplayString,
+           bbuChargeStatus            DisplayString,
+           bbuDegraded                DisplayString,
+           bbuType                    DisplayString
+       }
+
+-- node bbu table row definition
+bbuBroken OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Sensor reading for broken BBU.
+         (System Management Console:  Nodes > [nodeNumber] > Hardware Status)"
+       ::= { hcpBBUNodeTableEntry 1 }   
+
+-- node bbu table row definition
+bbuDiagnostics OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Sensor reading for BBU during diagnostics.
+         (System Management Console:  Nodes > [nodeNumber] > Hardware Status)"
+       ::= { hcpBBUNodeTableEntry 2 }   
+
+-- node bbu table row definition
+bbuChargeStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Sensor reading for BBU charge status.
+         (System Management Console:  Nodes > [nodeNumber] > Hardware Status)"
+       ::= { hcpBBUNodeTableEntry 3 }   
+
+-- node bbu table row definition
+bbuDegraded OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Sensor reading for degraded BBU.
+         (System Management Console:  Nodes > [nodeNumber] > Hardware Status)"
+       ::= { hcpBBUNodeTableEntry 4 }   
+
+-- node bbu table row definition
+bbuType OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "BBU type.
+          (System Management Console:  Nodes > [nodeNumber] > Hardware Status)"
+       ::= { hcpBBUNodeTableEntry 5 }
+
+hcpADNodeTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpADNodeTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of Active Directory status readings for each node in the HCP system."
+       ::= { hcpNodes 8 }
+
+-- node ad table row declaration
+hcpADNodeTableEntry  OBJECT-TYPE
+       SYNTAX       HcpADNodeTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Active Directory status readings for a node."
+       INDEX { nodeNumber }
+       ::= { hcpADNodeTable 1 }     
+       
+-- node ad table row syntax
+HcpADNodeTableEntry ::=
+       SEQUENCE {
+           adAccount                  INTEGER,
+           adCredentials              INTEGER,
+           adConnectivity             INTEGER,
+           adDisrupted                INTEGER,
+           adSSLConnection            INTEGER
+       }
+
+-- node ad table row definition
+adAccount OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) an account for the node exists in Active Directory.
+         (System Management Console:  Security > Authentication > Status)"
+       ::= { hcpADNodeTableEntry 1 }        
+       
+-- node ad table row definition
+adCredentials OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the Active Directory credentials on the node are valid.
+         (System Management Console:  Security > Authentication > Status)"
+       ::= { hcpADNodeTableEntry 2 }       
+
+-- node ad table row definition
+adConnectivity OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the node can connect to Active Directory.
+         (System Management Console:  Security > Authentication > Status)"
+       ::= { hcpADNodeTableEntry 3 }
+
+-- node ad table row definition
+adDisrupted OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the last communication between the node and Active Directory was disrupted. 
+         (System Management Console:  Security > Authentication > Status)"
+       ::= { hcpADNodeTableEntry 4 }
+
+-- node ad table row definition
+adSSLConnection OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the SSL connection between the node and Active Directory is functioning correctly.
+         (System Management Console:  Security > Authentication > Status)"
+       ::= { hcpADNodeTableEntry 5 }
+                                       
+---------------------------------------------------------------------------------------
+--
+-- HCP Storage: table of storage LUNs in this system
+--
+---------------------------------------------------------------------------------------
+-- Storage - volumes in this system
+
+hcpStorageTable  OBJECT-TYPE
+       SYNTAX       SEQUENCE OF HcpStorageTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Table of logical volumes in the HCP system."
+       ::= { hcpStorage 1 }
+
+hcpStorageTableEntry  OBJECT-TYPE
+       SYNTAX       HcpStorageTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Information about each logical volume."
+       INDEX   { storageTableIndex }
+       ::= { hcpStorageTable 1 }
+
+HcpStorageTableEntry ::=
+       SEQUENCE {
+           storageTableIndex            Integer32,
+           storageNodeNumber            Integer32,
+           storageUsage                 Counter64,
+           storageAvailability          Counter64,
+           storageCapacity              Counter64,
+           storageChannelUnit           DisplayString,
+           storageStatus                INTEGER,
+           volumeFeaturesValue          Integer32,
+           volumeFeaturesCsv            DisplayString,
+           volumeSpinStateValue         Integer32,
+           volumeSpinStateString        DisplayString
+       }
+
+storageTableIndex OBJECT-TYPE
+       SYNTAX       Integer32(1 .. 2147483647)
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Index into hcpStorageTable."
+       ::= { hcpStorageTableEntry 1 }
+
+storageNodeNumber OBJECT-TYPE
+       SYNTAX       Integer32
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "ID of the node currently managing the logical volume.
+         (System Management Console:  Node Status)"
+       ::= { hcpStorageTableEntry 2 }
+
+storageUsage OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Amount of used space on the logical volume, in bytes.
+         (System Management Console:  Hardware > [nodeNumber] > Logical volume usage)"
+       ::= { hcpStorageTableEntry 3 }
+
+storageAvailability OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Amount of unused space on the logical volume, in bytes."
+       ::= { hcpStorageTableEntry 4 }
+
+storageCapacity OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total amount of space on the logical volume, in bytes.
+         (System Management Console:  Hardware > [nodeNumber] > Logical volume usage)"
+       ::= { hcpStorageTableEntry 5 }
+
+storageChannelUnit OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Logical volume label ('Volume 1', 'Volume 2', etc.).
+         (System Management Console:  Hardware > [nodeNumber] > Logical volume usage)"
+       ::= { hcpStorageTableEntry 6 }
+
+storageStatus    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   unavailable(0),
+                   broken(1),
+                   suspended(2),
+                   initialized(3),
+                   available(4),
+                   degraded(5)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the logical volume.
+         (System Management Console:  Hardware > [nodeNumber] > Logical volume usage)"
+       ::= { hcpStorageTableEntry 7 }
+
+volumeFeaturesValue    OBJECT-TYPE
+       SYNTAX    Integer32 
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "A combination of all the flags enabled for this volume:
+            0x00000000 - None
+            0x00000001 - Primary ZCF
+            0x00000002 - Standby ZCF
+            0x00000004 - Encrypted
+            0x00000008 - Internal database transaction log
+            0x00000010 - Internal database
+            0x00000020 - Spindown
+            0x00000040 - MQE index
+            0x00000100 - Object data
+         (System Management Console:  Hardware > [nodeNumber] > Logical Volumes)"
+       ::= { hcpStorageTableEntry 8 }
+
+
+volumeFeaturesCsv    OBJECT-TYPE
+       SYNTAX    DisplayString 
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "A CSV list of volume features.
+         (System Management Console:  Hardware > [nodeNumber] > Logical Volumes)"
+       ::= { hcpStorageTableEntry 9 }
+
+volumeSpinStateValue    OBJECT-TYPE
+       SYNTAX    Integer32
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "An integer representing the volume spin state:
+            0x00000000 - Unknown
+            0x00000001 - Spinup requested
+            0x00000002 - Spinup wait
+            0x00000004 - Spinup error
+            0x00000008 - Spinup in progress
+            0x00000010 - Spinup fail
+            0x00000020 - Spinning
+            0x00000040 - Spindown requested
+            0x00000080 - Spindown wait
+            0x00000100 - Spindown error
+            0x00000200 - Spindown fail
+            0x00000400 - Spun down
+            0x10000000 - Failed
+         (System Management Console:  Hardware > [nodeNumber] > Logical Volumes)"
+       ::= { hcpStorageTableEntry 10 }
+
+
+volumeSpinStateString    OBJECT-TYPE
+       SYNTAX    DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "The effective volume spin state.
+         (System Management Console:  Hardware > [nodeNumber] > Logical Volumes)"
+       ::= { hcpStorageTableEntry 11 }
+
+---------------------------------------------------------------------------------------
+--
+-- HCP System: restart and shutdown functions
+--
+---------------------------------------------------------------------------------------
+
+-- actions: restart or shutdown the system
+
+restart    OBJECT-TYPE
+           SYNTAX       Integer32
+           MAX-ACCESS   read-write
+           STATUS       current
+           DESCRIPTION
+             "Restarts HCP when set to any non-zero value.
+             (System Management Console:  Nodes > Restart System)"
+           ::= { hcpSystem 1 }
+
+shutdown    OBJECT-TYPE
+            SYNTAX      Integer32
+            MAX-ACCESS  read-write
+            STATUS      current
+            DESCRIPTION
+              "Shuts down HCP when set to any non-zero value.
+              (System Management Console:  Nodes > Shut Down System)"
+           ::= { hcpSystem 2 }
+
+
+---------------------------------------------------------------------------------------
+--
+-- HCP Tenants: table of all tenants in this system
+--
+---------------------------------------------------------------------------------------
+
+hcpTenantTable  OBJECT-TYPE
+       SYNTAX        SEQUENCE OF HcpTenantTableEntry
+       MAX-ACCESS    not-accessible
+       STATUS        current
+       DESCRIPTION
+         "Table of tenants in the HCP system."
+       ::= { hcpTenants 1 }
+
+-- tenant table row declaration
+hcpTenantTableEntry  OBJECT-TYPE
+       SYNTAX       HcpTenantTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Information about each tenant."
+       INDEX { tenantIndex }
+       ::= { hcpTenantTable 1 }
+
+-- tenant table row syntax
+HcpTenantTableEntry ::=
+       SEQUENCE {
+           tenantIndex                        Integer32,
+           tenantName                         DisplayString,
+           tenantDescription                  DisplayString,
+           tenantContactFirstName             DisplayString,
+           tenantContactLastName              DisplayString,
+           tenantAddressLineOne               DisplayString,
+           tenantAddressLineTwo               DisplayString,
+           tenantAddressCity                  DisplayString,
+           tenantAddressStateProvince         DisplayString,
+           tenantAddressZipPostalCode         DisplayString,
+           tenantAddressCountry               DisplayString,
+           tenantPhone                        DisplayString,
+           tenantPhoneExtension               DisplayString,
+           tenantEmailAddress                 DisplayString,
+           tenantAllowSearch                  INTEGER,
+           tenantAllowVersioning              INTEGER,
+           tenantAllowRetentionModeSelection  INTEGER,
+           tenantAllowReplication             INTEGER,
+           tenantObjectsStored                Counter64,
+           tenantObjectsIndexed               Counter64,
+           tenantHardQuota                    Counter64,
+           tenantSoftQuota                    Counter64,
+           tenantAllocatedQuota               Counter64,
+           tenantPhysicalBytesUsed            Counter64,
+           tenantLogicalBytesUsed             Counter64,
+           nonReplicatedDpl1Namespace         INTEGER,
+           tenantNamespaceQuota               DisplayString,
+           tenantAuthentication               DisplayString,
+           tenantManagementNetwork            DisplayString,
+           tenantDataNetwork                  DisplayString
+       }
+
+-- tenant table row definition
+tenantIndex OBJECT-TYPE
+       SYNTAX       Integer32(1 .. 2147483647)
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Index into hcpTenantTable."
+       ::= { hcpTenantTableEntry 1 }
+
+tenantName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant name. 
+         (System Management Console:  Tenants > [tenantName] > Settings)"                           
+       ::= { hcpTenantTableEntry 2 }
+
+tenantDescription OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant description. 
+         (System Management Console:  Tenants > [tenantName] > Settings)" 
+       ::= { hcpTenantTableEntry 3 }
+
+tenantContactFirstName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "First name of tenant contact.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)"
+       ::= { hcpTenantTableEntry 4 }
+
+tenantContactLastName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Last name of tenant contact.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)"
+       ::= { hcpTenantTableEntry 5 }
+
+tenantAddressLineOne OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "First line of tenant contact address.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)"                                 
+       ::= { hcpTenantTableEntry 6 }
+
+tenantAddressLineTwo OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Second line of tenant contact address.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 7 }
+
+tenantAddressCity OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact city.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 8 }
+
+tenantAddressStateProvince OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact state or province.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 9 }
+
+tenantAddressZipPostalCode OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact zip or postal code.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 10 }
+
+tenantAddressCountry OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact country.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 11 }
+
+tenantPhone OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact telephone number.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 12 }
+
+tenantPhoneExtension OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact telephone number extension.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 13 }
+
+tenantEmailAddress OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Tenant contact email address.
+         (System Management Console:  Tenants > [tenantName] > Settings > 
+         Contact Information)" 
+       ::= { hcpTenantTableEntry 14 }
+
+tenantAllowSearch OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the tenant has the search feature
+             and can enable search for its namespaces.
+            (System Management Console:  Tenants > [tenantName] > Settings)" 
+       ::= { hcpTenantTableEntry 15 }
+
+tenantAllowVersioning OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the tenant has the object versioning
+             feature and can enable versioning for its namespaces.
+            (System Management Console:  Tenants > [tenantName] > Settings)" 
+       ::= { hcpTenantTableEntry 16 }
+
+tenantAllowRetentionModeSelection OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the tenant has the ability to select
+             the retention mode for its namespaces.
+            (System Management Console:  Tenants > [tenantName] > Settings)" 
+       ::= { hcpTenantTableEntry 17 }
+
+tenantAllowReplication OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the tenant can be replicated.
+            (System Management Console:  Tenants > [tenantName] > Settings)" 
+       ::= { hcpTenantTableEntry 18 }
+
+tenantObjectsStored OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Number of objects currently stored in all namespaces owned by the tenant.
+         (System Management Console:  Tenants > [tenantName] > Overview)"
+       ::= { hcpTenantTableEntry 19 }
+
+tenantObjectsIndexed OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+	   "Number of indexed objects currently stored in all namespaces owned by 
+          the tenant.
+         (System Management Console:  Tenants > [tenantName] > Overview)"
+       ::= { hcpTenantTableEntry 20 }
+
+tenantHardQuota OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Hard quota for the tenant.
+         (System Management Console:  Tenants > [tenantName] > Settings)"
+       ::= { hcpTenantTableEntry 21 }
+
+tenantSoftQuota OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Soft quota for the tenant.
+         (System Management Console:  Tenants > [tenantName] > Settings)"
+       ::= { hcpTenantTableEntry 22 }
+
+tenantAllocatedQuota OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total amount of storage, in bytes, that the tenant has allocated to 
+          its namespaces.
+         (System Management Console:  Tenants > [tenantName] > Overview)"
+       ::= { hcpTenantTableEntry 23 }
+
+tenantPhysicalBytesUsed OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total amount of storage, in bytes, used by all the namespaces owned by
+          the tenant to store object data and metadata.
+         (System Management Console:  Tenants)"
+       ::= { hcpTenantTableEntry 24 }
+
+tenantLogicalBytesUsed OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total size, in bytes, of the stored data and custom metadata before it 
+          was added to the namespaces owned by the tenant."
+       ::= { hcpTenantTableEntry 25 }
+
+nonReplicatedDpl1Namespace OBJECT-TYPE
+       SYNTAX       INTEGER {
+                          yes(1),
+                          no(2)
+                    }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "An indication of whether (1) or not (2) the tenant owns any 
+          non-replicated namespaces with a DPL that is considered unsafe 
+          for the HCP system hardware configuration."
+       ::= { hcpTenantTableEntry 26 }
+
+tenantNamespaceQuota OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Namespace quota for the tenant, if set, or 'No Quota' if not set.
+         (System Management Console:  Tenants > [tenantName] > Overview)"
+       ::= { hcpTenantTableEntry 27 }
+       
+tenantAuthentication OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "CSV list of the authentication types enabled for this tenant.
+         (System Management Console:  Tenants > [tenantName] > Overview)"
+       ::= { hcpTenantTableEntry 28 }       
+
+tenantManagementNetwork OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Management network for the tenant.
+         (System Management Console:  Tenants > [tenantName] > Settings)"
+       ::= { hcpTenantTableEntry 29 }
+
+tenantDataNetwork OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Data network for the tenant.
+         (System Management Console:  Tenants > [tenantName] > Settings)"
+       ::= { hcpTenantTableEntry 30 }
+
+---------------------------------------------------------------------------------------
+--
+-- HCP Services
+--
+---------------------------------------------------------------------------------------
+
+-- Capacity Balancing service group
+capacityBalancing           OBJECT IDENTIFIER ::= { hcpServices 1 }
+capacityBalancingStats      OBJECT IDENTIFIER ::= { capacityBalancing 1 }
+capacityBalancingSettings   OBJECT IDENTIFIER ::= { capacityBalancing 2 }
+
+-- Capacity Balancing Stats
+capacityBalancingStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   unrecoverable(5),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the capacity balancing service.
+         (System Management Console:  Overview > Services)"
+       ::= { capacityBalancingStats 1 }
+
+capacityBalancingStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the capacity balancing service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { capacityBalancingStats 2 }
+
+
+
+-- Compression service group
+compression           OBJECT IDENTIFIER ::= { hcpServices 2 }
+compressionStats      OBJECT IDENTIFIER ::= { compression 1 }
+compressionSettings   OBJECT IDENTIFIER ::= { compression 2 }
+
+-- Compression Stats
+compressionStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the compression service.
+         (System Management Console:  Overview > Services)"
+       ::= { compressionStats 1 }
+
+compressionStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the compression service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { compressionStats 2 }
+
+compressionSpaceSaved OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Number of bytes of storage freed by compressed objects.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionStats 3 }
+
+compressionPercentSpaceSaved OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Amount of storage space currently saved by object compression, expressed 
+             as a percentage of the total space available for storing objects.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionStats 4 }
+
+compressionObjectsCompressed OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Number of objects currently compressed.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionStats 5 }
+
+-- Compression Settings
+compressionRate OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            low(10),
+                            medium(20),
+                            high(30)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        deprecated
+          DESCRIPTION
+            "Rate at which HCP processes objects for compression.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionSettings 1 }
+
+compressionAfterDays OBJECT-TYPE
+          SYNTAX        Integer32(1 .. 2147483647)
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Number of days to wait before compressing an object.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionSettings 2 }
+
+compressionMinSizeKB OBJECT-TYPE
+          SYNTAX        Integer32(1 .. 2147483647)
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Minimum size of objects to compress.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionSettings 3 }
+
+compressionExcludeList OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Locations, names, and types of objects to be excluded from compression.
+            (System Management Console:  Services > Compression)"
+          ::= { compressionSettings 4 }
+
+
+
+-- Content Verification service group
+contentVerification          OBJECT IDENTIFIER ::= { hcpServices 3 }
+contentVerificationStats     OBJECT IDENTIFIER ::= { contentVerification 1 }
+contentVerificationSettings  OBJECT IDENTIFIER ::= { contentVerification 2 }
+
+-- Content Verification Stats
+contentVerificationStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   unrecoverable(5),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the content verification service.
+         (System Management Console:  Overview > Services)"
+       ::= { contentVerificationStats 1 }
+
+contentVerificationStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the content verification service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { contentVerificationStats 2 }
+
+-- Content Verification Settings
+contentVerificationRepairMode OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            checkAllObjectsRepairIfNeeded(1),
+                            checkRepairableRepairIfNeeded(2),
+                            doNotCheck(3)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Sets or gets the content verification mode:
+             (1) - checks all objects, repairs if needed
+             (2) - checks only the repairable objects and repairs if needed
+             (3) - turns content verification off
+             In HCP 3.0, this variable was: contentVerificationRepairOption"
+          ::= { contentVerificationSettings 1 }
+
+identifyUnavailableObjectsDpl1UnavailableNode OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        deprecated
+          DESCRIPTION
+            "This setting indicates whether the runtime system should identify unavailable objects where DPL=1 and
+             the node is unavailable:
+             (1) - identify
+             (2) - don't identify"
+          ::= { contentVerificationSettings 2 }
+
+
+
+-- Duplicate Elimination service group
+duplicateElimination          OBJECT IDENTIFIER ::= { hcpServices 4 }
+duplicateEliminationStats     OBJECT IDENTIFIER ::= { duplicateElimination 1 }
+duplicateEliminationSettings  OBJECT IDENTIFIER ::= { duplicateElimination 2 }
+
+-- Duplication Elimination Stats
+duplicateEliminationStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the duplicate elimination service.
+         (System Management Console:  Overview > Services)"
+       ::= { duplicateEliminationStats 1 }
+
+duplicateEliminationStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the duplicate elimination service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { duplicateEliminationStats 2 }
+
+duplicateEliminationNumObjectsMerged OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total number of objects for which data was merged since HCP was installed.
+         (System Management Console:  Services > Duplicate Elimination)"
+       ::= { duplicateEliminationStats 3 }
+
+duplicateEliminationNumBytesSaved OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Total number of bytes of storage freed due to duplicate elimination
+          since HCP was installed.
+         (System Management Console:  Services > Duplicate Elimination)"
+       ::= { duplicateEliminationStats 4 }
+
+
+
+-- Garbage Collection service group
+garbageCollection           OBJECT IDENTIFIER ::= { hcpServices 5 }
+garbageCollectionStats      OBJECT IDENTIFIER ::= { garbageCollection 1 }
+garbageCollectionSettings   OBJECT IDENTIFIER ::= { garbageCollection 2 }
+
+-- Garbage Collection Stats
+garbageCollectionStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the garbage collection service.
+         (System Management Console:  Overview > Services)"
+       ::= { garbageCollectionStats 1 }
+
+garbageCollectionStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the garbage collection service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { garbageCollectionStats 2 }
+
+
+-- Protection service group
+protection              OBJECT IDENTIFIER ::= { hcpServices 6 }
+protectionStats         OBJECT IDENTIFIER ::= { protection 1 }
+protectionSettings      OBJECT IDENTIFIER ::= { protection 2 }
+
+-- Protection Stats
+protectionStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   unrecoverable(5),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the protection service.
+         (System Management Console:  Overview > Services)"
+       ::= { protectionStats 1 }
+
+protectionStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the protection service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { protectionStats 2 }
+
+
+-- Configured replication links on this system
+replication              OBJECT IDENTIFIER ::= { hcpServices 7 }
+
+replicationLinkTable  OBJECT-TYPE
+       SYNTAX       SEQUENCE OF ReplicationLinkTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Table of replication links."
+       ::= { replication 1 }
+
+replicationLinkTableEntry  OBJECT-TYPE
+       SYNTAX       ReplicationLinkTableEntry
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Information about each replication link."
+       INDEX   { replicationLinkTableIndex }
+       ::= { replicationLinkTable 1 }
+
+ReplicationLinkTableEntry ::=
+       SEQUENCE {
+           replicationLinkTableIndex                Integer32,
+           replicationLinkName                      DisplayString,
+           replicationLinkId                        DisplayString,
+           replicationLinkRemoteHostnames           DisplayString,
+           replicationLinkRemotePort                Integer32,
+           replicationLinkStatus                    DisplayString,
+           replicationLinkAuthoritative             INTEGER,
+           replicationLinkSuspended                 INTEGER,
+           replicationLinkMaster                    INTEGER,
+           replicationLinkBacklogSeconds            Counter64,
+           replicationLinkBytes                     Counter64,
+           replicationLinkBytesPerSecond            Counter64,
+           replicationLinkOperations                Counter64,
+           replicationLinkOperationsPerSecond       Counter64,
+           replicationLinkErrors                    Counter64,
+           replicationLinkErrorsPerSecond           Counter64,
+           replicationLinkObjectsToBeReplicated     Counter64,
+           replicationLinkBytesToBeReplicated       Counter64,
+           replicationLinkNetwork                   DisplayString
+       }
+
+replicationLinkTableIndex OBJECT-TYPE
+       SYNTAX       Integer32(1 .. 2147483647)
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Index into replicationLinkTable."
+       ::= { replicationLinkTableEntry 1 }
+
+replicationLinkName OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Replication link name.
+         (System Management Console:  Services > Replication)"
+       ::= { replicationLinkTableEntry 2 }
+
+replicationLinkId OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Replication link ID."
+       ::= { replicationLinkTableEntry 3 }
+
+replicationLinkRemoteHostnames OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "DNS name of the other HCP system included in the replication link or a CSV
+          list of the IP addresses of one or more nodes in that system.
+         (System Management Console:  Services > Replication > [linkName] > Configuration)"
+       ::= { replicationLinkTableEntry 4 }
+
+replicationLinkRemotePort OBJECT-TYPE
+       SYNTAX       Integer32
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Replication port on the other HCP system included in the replication link.
+         (System Management Console:  Services > Replication > [linkName] > Configuration)"
+       ::= { replicationLinkTableEntry 5 }
+
+
+replicationLinkStatus OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Status of the replication link.
+         (System Management Console:  Services > Replication)"
+       ::= { replicationLinkTableEntry 6 }
+
+replicationLinkAuthoritative OBJECT-TYPE
+       SYNTAX       INTEGER { yes(1), no(2) }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether the HCP system is currently the source (1) or
+          target (2) of replication activity on the replication link (that is, 
+          whether objects are being copied from or to this system)."
+       ::= { replicationLinkTableEntry 7 }
+
+replicationLinkSuspended OBJECT-TYPE
+       SYNTAX       INTEGER { yes(1), no(2) }
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+         "Suspends (1) or resumes (2) the replication link.
+         (System Management Console:  Services > Replication > [linkName] > Management)"
+       ::= { replicationLinkTableEntry 8 }
+
+replicationLinkMaster OBJECT-TYPE
+       SYNTAX       INTEGER { yes(1), no(2) }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether the HCP system is the primary system (1) or
+          replica (2) for the replication link."
+       ::= { replicationLinkTableEntry 9 }
+
+replicationLinkBacklogSeconds OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached backlog time for the replication link, in seconds. This value is updated every 10 minutes.
+         (System Management Console:  Services > Replication > [linkName] > Overview)"
+       ::= { replicationLinkTableEntry 10 }
+
+replicationLinkBytes OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached number of bytes transferred or received through the replication
+          link in the last minute. This value is updated every 10 minutes."
+       ::= { replicationLinkTableEntry 11 }
+
+replicationLinkBytesPerSecond OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached data transmission rate for the replication link during the past
+          minute, in bytes per second. This value is updated every 10 minutes.
+         (System Management Console:  Services > Replication > [linkName] > Overview)"
+       ::= { replicationLinkTableEntry 12 }
+
+replicationLinkOperations OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached number of replication operations performed on the replication link in
+          the past minute. This value is updated every 10 minutes."
+       ::= { replicationLinkTableEntry 13 }
+
+replicationLinkOperationsPerSecond OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached operation rate for the replication link during the past minute,
+          in operations per second. This value is updated every 10 minutes.
+         (System Management Console:  Services > Replication > [linkName] > Overview)"
+       ::= { replicationLinkTableEntry 14 }
+
+replicationLinkErrors OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached number of errors that have occurred on the replication link in the
+          last minute. This value is updated every 10 minutes."
+       ::= { replicationLinkTableEntry 15 }
+
+replicationLinkErrorsPerSecond OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached number of errors that have occurred on the replication link
+          during the past minute, in errors per second. This value is updated every 10 minutes."
+       ::= { replicationLinkTableEntry 16 }
+
+replicationLinkObjectsToBeReplicated OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached approximation of the number of objects currently waiting to be replicated on the
+          replication link. This value is updated every 10 minutes."
+       ::= { replicationLinkTableEntry 17 }
+
+replicationLinkBytesToBeReplicated OBJECT-TYPE
+       SYNTAX       Counter64
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Cached approximation of the amount of data currently waiting to be replicated on the
+          replication link, in bytes. This value is updated every 10 minutes."
+       ::= { replicationLinkTableEntry 18 }
+
+replicationLinkNetwork OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Network used for this replication link.
+          (System Management Console:  Services > Replication > Settings)"
+       ::= { replicationLinkTableEntry 19 }
+
+-- Scavenging service group
+scavenging              OBJECT IDENTIFIER ::= { hcpServices 8 }
+scavengingStats         OBJECT IDENTIFIER ::= { scavenging 1 }
+scavengingSettings      OBJECT IDENTIFIER ::= { scavenging 2 }
+
+-- Scavenging Stats
+scavengingStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   unrecoverable(5),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the scavenging service.
+         (Administration Console:  Overview > Services)"
+       ::= { scavengingStats 1 }
+
+scavengingStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the scavenging service status was last updated.
+         (Administration Console:  Overview > Services)"
+       ::= { scavengingStats 2 }
+
+
+-- Search group - Search settings
+search                           OBJECT IDENTIFIER ::= { hcpServices 9 }
+searchStats                      OBJECT IDENTIFIER ::= { search 1 }
+searchSettings                   OBJECT IDENTIFIER ::= { search 2 }
+metadataQueryEngineSettings      OBJECT IDENTIFIER ::= { search 3 }
+hcpSearchFacilitySettings        OBJECT IDENTIFIER ::= { search 4 }
+
+-- Search Stats
+queryingConnectedSearch  OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the search facility is currently
+          connected for querying.
+         (System Management Console:  Services > Search)"
+       ::= { searchStats 1 }
+
+indexingConnectedSearch  OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the search facility is currently
+          connected for indexing.
+         (System Management Console:  Services > Search)"
+       ::= { searchStats 2 }
+
+-- Search Settings
+enabledSearchConsole    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether  (1) or not (2) the Search Console is available.
+         (System Management Console:  Services >  Search)"
+       ::= { searchSettings 1 }
+
+enabledSearchAPI    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+         "Enables (1) or disables (2) Hitachi Data Discovery Suite (HDDS) access
+          to the HCP system.
+         (System Management Console:  Services > Search)"
+       ::= { searchSettings 2 }
+
+queryingEnabledSearch    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the repository is able to be searched.
+          This applies across all namespaces.
+         (System Management Console:  Services > Search)"
+       ::= { searchSettings 3 }
+
+indexingEnabledSearch    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+         "Enables (1) or disables (2) indexing of new objects and metadata 
+          changes.  This applies across all namespaces.
+         (System Management Console:  Services > Search)"
+       ::= { searchSettings 4 }
+
+enabledSearchAdminUI    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-write
+       STATUS       current
+       DESCRIPTION
+         "Enables (1) or disables (2) access to the search facility administrative 
+          interface.
+         (System Management Console:  Services > Search)"
+       ::= { searchSettings 5 }
+
+searchFacility   OBJECT-TYPE
+       SYNTAX DisplayString
+       MAX-ACCESS read-only
+       STATUS current
+       DESCRIPTION 
+         "Name of the currently enabled search facility: 'MQE', 'HDDS', 'HCP', 
+         or 'None' if no search facility is enabled.
+        (System Management Console:  Services > Search)"
+       ::= { searchSettings 6 }
+
+-- MQE Search Settings
+enabledMqeApi    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the metadata query API is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > MQE)"
+       ::= { metadataQueryEngineSettings 1 }
+
+enabledMqeIndexing    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) metadata query indexing is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > MQE)"
+       ::= { metadataQueryEngineSettings 2 }
+
+enabledMqeIndexingOfCustomMetadata    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) metadata query engine indexing of custom metadata is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > MQE)"
+       ::= { metadataQueryEngineSettings 3 }
+
+-- HCP Search Facility Settings
+enabledHcpSearchApi    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) the HCP search facility API is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > HCP Search)"
+       ::= { hcpSearchFacilitySettings 1 }
+
+enabledHcpSearchFacilityAdminInterfaceAccess    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) access to the HCP search facility administrative interface is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > HCP Search)"
+       ::= { hcpSearchFacilitySettings 2 }
+
+enabledHcpSearchFacilityIndexing    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) HCP search facility indexing is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > HCP Search)"
+       ::= { hcpSearchFacilitySettings 3 }
+
+enabledHcpSearchFacilityCustomMetadataIndexing    OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   yes(1),
+                   no(2)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Indication of whether (1) or not (2) HCP search facility indexing of custom metadata is enabled.
+         (System Management Console:  Services >  Search > Search Facility Settings > HCP Search)"
+       ::= { hcpSearchFacilitySettings 4 }
+
+
+-- Shred group - shredding settings:
+shredding              OBJECT IDENTIFIER ::= { hcpServices 10 }
+shreddingStats         OBJECT IDENTIFIER ::= { shredding 1 }
+shreddingSettings      OBJECT IDENTIFIER ::= { shredding 2 }
+
+-- Shredding Stats
+shreddingObjectCount OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Number of objects currently waiting to be shredded.
+            (System Management Console:  Services > Shredding)"
+          ::= { shreddingStats 1 }
+
+shreddingTotalObjectSizeBytes OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total number of bytes in the objects currently waiting to be shredded.
+            (System Management Console:  Services > Shredding)"
+          ::= { shreddingStats 2 }
+
+-- Shredding Settings
+shreddingRate OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            high(0),
+                            medium(500),
+                            low(5000)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Rate at which HCP processes objects that are waiting to be shredded.
+             The higher the rate, the faster the objects are shredded.
+            (System Management Console:  Services > Shredding)"
+          ::= { shreddingSettings 1 }
+
+shreddingSendSyslogEvents     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) to send messages about shredding
+             events to syslog servers.
+            (System Management Console:  Services > Shredding)"
+          ::= { shreddingSettings 2 }
+
+-- Migration Settings
+migration              OBJECT IDENTIFIER ::= { hcpServices 11 }
+migrationStats         OBJECT IDENTIFIER ::= { migration 1 }
+
+migrationDescription OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Migration description.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 1 }
+
+migrationState OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Current status of the migration.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 2 }
+
+migrationCompleteSize OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Number of bytes migrated.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 3 }
+
+migrationCompleteObjects OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Number of objects migrated.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 4 }
+
+migrationTotalSize OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total number of bytes to be migrated.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 5 }
+
+migrationTotalObjects OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total number of objects to be migrated.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 6 }
+
+migrationRuntime OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Time consumed by migration.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 7 }
+
+migrationRemainingTime OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Estimated remaining time for the migration to complete.
+	      (System Management Console:  Services > Migration)"
+          ::= { migrationStats 8 }
+
+
+-- Storage Tiering service
+storageTiering              OBJECT IDENTIFIER ::= { hcpServices 12 }
+storageTieringStats        OBJECT IDENTIFIER ::= { storageTiering 1 }
+
+-- StorageTiering Stats
+storageTieringStatus OBJECT-TYPE
+        SYNTAX    INTEGER {
+                    waiting(-1),
+                    stopped(0),
+                    completed(1),
+                    ongoing(2),
+                    running(3),
+                    fixing(4),
+                    unrecoverable(5),
+                    stopping(6),
+                    disabled(7)
+                  }
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+          "Current status of the storage tiering service.
+          (System Management Console:  Overview > Services)"
+        ::= { storageTieringStats 1 }
+
+storageTieringStatusTime OBJECT-TYPE
+        SYNTAX       DateTime
+        MAX-ACCESS   read-only
+        STATUS       current
+        DESCRIPTION
+          "Date and time the storage tiering service status was last updated.
+          (System Management Console:  Overview > Services)"
+        ::= { storageTieringStats 2 }
+
+
+-- Disposition service group
+disposition                   OBJECT IDENTIFIER ::= { hcpServices 13 }
+dispositionStats              OBJECT IDENTIFIER ::= { disposition 1 }
+dispositionSettings           OBJECT IDENTIFIER ::= { disposition 2 }
+
+-- Disposition Stats
+dispositionStatus OBJECT-TYPE
+       SYNTAX    INTEGER {
+                   waiting(-1),
+                   stopped(0),
+                   completed(1),
+                   ongoing(2),
+                   running(3),
+                   fixing(4),
+                   stopping(6),
+                   disabled(7)
+                 }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Current status of the disposition service.
+         (System Management Console:  Overview > Services)"
+       ::= { dispositionStats 1 }
+
+dispositionStatusTime OBJECT-TYPE
+       SYNTAX       DateTime
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Date and time the disposition service status was last updated.
+         (System Management Console:  Overview > Services)"
+       ::= { dispositionStats 2 }
+
+
+
+
+---------------------------------------------------------------------------------------
+--
+-- HCP Security
+--
+---------------------------------------------------------------------------------------
+
+-- Global Data Access Permissions
+dataAccessPermissions      OBJECT IDENTIFIER ::= { hcpSecurity 1 }
+
+dataAccessRead     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the systemwide permission mask
+             includes the read permission.
+            (System Management Console:  Security > Permissions)"
+          ::= { dataAccessPermissions 1 }
+
+dataAccessWrite     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the systemwide permission mask
+             includes the write permission.
+            (System Management Console:  Security > Permissions)"
+          ::= { dataAccessPermissions 2 }
+
+dataAccessDelete     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the systemwide permission mask
+             includes the delete permission.
+            (System Management Console:  Security > Permissions)"
+          ::= { dataAccessPermissions 3 }
+
+dataAccessPurge     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the systemwide permission mask
+             includes the purge permission.
+            (System Management Console:  Security > Permissions)"
+          ::= { dataAccessPermissions 4 }
+
+dataAccessPrivileged    OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the systemwide permission mask
+             includes the privileged permission.
+            (System Management Console:  Security > Permissions)"
+          ::= { dataAccessPermissions 5 }
+
+dataAccessSearch     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the systemwide permission mask
+             includes the search permission.
+            (System Management Console:  Security > Permissions)"
+          ::= { dataAccessPermissions 6 }
+
+
+-- Network Security
+networkSecurity      OBJECT IDENTIFIER ::= { hcpSecurity 2 }
+
+pingEnabled OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Allows (1) or prevents (2) HCP nodes from responding to ping requests.
+            (System Management Console:  Security > Network Security)"
+          ::= { networkSecurity 1 }
+
+sshEnabled OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Allows (1) or prevents (2) access to HCP nodes through SSH.
+            (System Management Console:  Security > Network Security)"
+          ::= { networkSecurity 2 }
+
+-- Active Directory Settings
+activeDirectory                 OBJECT IDENTIFIER ::= { hcpSecurity 3 }
+
+adEnabled OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            enabled(1),
+                            disabled(2),
+                            upgraded(3)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Active Directory status.
+            (System Management Console:  Security > Authentication)"
+          ::= { activeDirectory 1 }
+          
+adDomainName OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Active Directory domain name.
+            (System Management Console:  Security > Authentication)"
+          ::= { activeDirectory 2 }
+
+adComputerAccount OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "HCP computer account for Active Directory support.
+            (System Management Console:  Security > Authentication)"
+          ::= { activeDirectory 3 }
+          
+adOrganizationalUnit OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Organizational unit for Active Directory support.
+            (System Management Console:  Security > Authentication)"
+          ::= { activeDirectory 4 }          
+
+adSSOConfiguredCorrectly OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) Active Directory single sign-on is configured correctly for all tenants and namespaces for which it is enabled.
+            (System Management Console:  Security > Authentication > Status)"
+          ::= { activeDirectory 5 }
+          
+adComputerAccountExists OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the HCP computer account exists in Active Directory.
+            (System Management Console:  Security > Authentication > Status)"
+          ::= { activeDirectory 6 }
+
+---------------------------------------------------------------------------------------
+--
+-- HCP Monitoring
+--
+---------------------------------------------------------------------------------------
+
+-- System status
+systemStatus               OBJECT IDENTIFIER ::= { hcpMonitoring 1 }
+
+hcpVersion OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Current version of HCP.
+            (System Management Console:  all pages)"
+          ::= { systemStatus 1 }
+
+serialNumber OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Serial number of the HCP system.
+            (System Management Console:  all pages)"
+          ::= { systemStatus 2 }
+
+hcpMibVersion OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Version of this MIB file."
+          ::= { systemStatus 3 }
+
+currentTime OBJECT-TYPE
+          SYNTAX        DateTime
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Current HCP system internal date and time.
+            (System Management Console:  all pages)"
+          ::= { systemStatus 4 }
+
+metricsTime OBJECT-TYPE
+          SYNTAX        DateTime
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Date and time of the last update to HCP system metrics."
+          ::= { systemStatus 5 }
+
+totalCapacity OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total amount of storage space in the HCP system, in bytes.
+            (System Management Console:  Overview > Storage Volume)"
+          ::= { systemStatus 6 }
+
+protectedVolume OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Amount of storage space, in bytes, currently occupied by all stored
+             data, including original file data, metadata, and any redundant data
+             required to conform to namespace DPL settings.
+            (System Management Console:  Overview > Storage Volume)"
+          ::= { systemStatus 7 }
+
+ingestedDataVolume OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total size, in bytes, of the stored data and custom metadata before it 
+             was added to the repository.
+            (System Management Console:  Overview > Storage Volume)"
+          ::= { systemStatus 8 }
+
+objectCount OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total number of objects stored in the repository.
+            (System Management Console:  Overview > Objects)"
+          ::= { systemStatus 9 }
+
+indexedObjectCount OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Number of indexed, and therefore searchable, objects stored in the
+             repository.
+            (System Management Console:  Overview > Objects)"
+          ::= { systemStatus 10 }
+
+hcpStorageType OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Type of storage used by the HCP system."
+          ::= { systemStatus 11 }
+
+replicationEnabled OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) replication is enabled for the
+             HCP system."
+       ::= { systemStatus 12 }
+
+searchEnabled OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) search is enabled for the
+             HCP system."
+       ::= { systemStatus 13 }
+
+systemDplUnsafe OBJECT-TYPE
+          SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                       }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the HCP system DPL setting is below
+             what is considered safe.  It is highly recommended that systems with
+             internal storage have a DPL of at least two."
+       ::= { systemStatus 14 }
+
+irreparableObjectsPresent OBJECT-TYPE
+          SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                       }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the repository contains any irreparable objects."
+          ::= { systemStatus 15 }
+
+unavailableObjectsPresent OBJECT-TYPE
+          SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                       }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) the repository contains any unavailable objects."
+          ::= { systemStatus 16 }
+
+currentMQEIndexSize OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Size, in bytes, of the metadata query engine index."                      
+          ::= { systemStatus 17 }
+
+hcpHotfixVersion OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Hotfix versions applied to the system.           
+            (System Management Console:  all pages)"
+          ::= { systemStatus 18 }
+
+spindownStorageUsage OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total amount of used space in spindown storage on all storage nodes.
+             (System Management Console:  Storage Tiering > Volume Usage graph)"
+          ::= { systemStatus 19 }
+
+spindownStorageCapacity OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total amount of spindown storage capacity on all storage nodes.
+             (System Management Console:  Storage Tiering > Volume Usage graph)"
+          ::= { systemStatus 20 }
+
+indexingVolumesUsageByIndex OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total amount of space used by the index on all index-enabled volumes.
+             (System Management Console:  Services > Search > Search Facility Settings > MQE)"
+          ::= { systemStatus 21 }
+
+indexingVolumesUsageByOtherData OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total amount of space used by data other than the index on all index-enabled volumes.
+             (System Management Console:  Services > Search > Search Facility Settings > MQE)"
+          ::= { systemStatus 22 }
+
+
+indexingVolumesCapacity OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total space on all index-enabled volumes.
+             (System Management Console:  Services > Search > Search Facility Settings > MQE)"
+          ::= { systemStatus 23 }
+
+indexingTotalIndexVolumesCapacity OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total space on all dedicated index volumes.
+             (System Management Console:  Services > Search > Search Facility Settings > MQE)"
+          ::= { systemStatus 24 }
+
+indexingTotalSharedVolumesCapacity OBJECT-TYPE
+          SYNTAX        Counter64
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Total space on all shared volumes.
+             (System Management Console:  Services > Search > Search Facility Settings > MQE)"
+          ::= { systemStatus 25 }
+
+spindownTimePercentWeek OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Average percent of time spindown storage has been spun down over the past week.
+             (System Management Console:  Services > Storage Tiering)"
+          ::= { systemStatus 26 }
+
+spindownTimePercentMonth OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Average percent of time spindown storage has been spun down over the past month.
+             (System Management Console:  Services > Storage Tiering)"
+          ::= { systemStatus 27 }
+
+
+spindownTimePercentSixMonths OBJECT-TYPE
+          SYNTAX        DisplayString
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Average percent of time spindown storage has been spun down over the past six months.
+             (System Management Console:  Services > Storage Tiering)"
+          ::= { systemStatus 28 }
+
+networkManagementEnabled OBJECT-TYPE
+           SYNTAX       INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) virtual network management is enabled.
+             (System Management Console:  Configuration > Miscellaneous)"
+       ::= { systemStatus 29 }
+
+---------------------------------------------------------------------------------------
+--
+-- HCP Back-end Switches: table of back-end switches in this system
+--
+---------------------------------------------------------------------------------------
+
+hcpBackEndSwitchTable  OBJECT-TYPE
+       SYNTAX          SEQUENCE OF HcpBackEndSwitchTableEntry
+       MAX-ACCESS      not-accessible
+       STATUS          current
+       DESCRIPTION
+         "Table of back-end switches in the HCP system."
+       ::= { hcpBackEndSwitches 1 }
+
+-- back-end switch table row declaration
+hcpBackEndSwitchTableEntry  OBJECT-TYPE
+       SYNTAX               HcpBackEndSwitchTableEntry
+       MAX-ACCESS           not-accessible
+       STATUS               current
+       DESCRIPTION
+         "Information about each back-end switch."
+       INDEX { backEndSwitchIndex }
+       ::= { hcpBackEndSwitchTable 1 }
+
+-- node table row syntax
+HcpBackEndSwitchTableEntry ::=
+       SEQUENCE {
+           backEndSwitchIndex      Integer32,
+           backEndSwitchType       DisplayString,
+           backEndSwitchIpAddress  IpAddress,
+           backEndSwitchStatus     INTEGER
+       }
+
+-- back-end switch table row definition
+backEndSwitchIndex OBJECT-TYPE
+       SYNTAX       Integer32(1 .. 2147483647)
+       MAX-ACCESS   not-accessible
+       STATUS       current
+       DESCRIPTION
+         "Index into hcpBackEndSwitchTable."
+       ::= { hcpBackEndSwitchTableEntry 1 }
+
+backEndSwitchType  OBJECT-TYPE
+       SYNTAX       DisplayString
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Back-end switch type.
+         (System Management Console:  Hardware > Component Status)"
+       ::= { hcpBackEndSwitchTableEntry 2 }
+
+backEndSwitchIpAddress  OBJECT-TYPE
+       SYNTAX       IpAddress
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "IP address of the back-end switch.
+         (System Management Console:  Hardware > Component Status)"
+       ::= { hcpBackEndSwitchTableEntry 3 }
+
+backEndSwitchStatus OBJECT-TYPE
+       SYNTAX       INTEGER {
+                      unavailable(0),
+                      unhealthy(1),
+                      healthy(2),
+                      initial(3)
+                    }
+       MAX-ACCESS   read-only
+       STATUS       current
+       DESCRIPTION
+         "Status of the back-end switch.
+         (System Management Console:  Hardware > Component Status)"
+       ::= { hcpBackEndSwitchTableEntry 4 }
+
+-- Hitachi Device Manager Group - Device Manager settings
+hiCommand               OBJECT IDENTIFIER ::= { hcpMonitoring 2 }
+deviceMgr               OBJECT IDENTIFIER ::= { hiCommand 1 }
+deviceMgrStats          OBJECT IDENTIFIER ::= { deviceMgr 1 }
+deviceMgrSettings       OBJECT IDENTIFIER ::= { deviceMgr 2 }
+tuningMgrIntegration    OBJECT IDENTIFIER ::= { hiCommand 2 }
+
+-- Device Manager Stats
+lastSuccessTimeHCDM     OBJECT-TYPE
+          SYNTAX        DateTime
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Date and time of the last successful update HCP sent to Hitachi
+             Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrStats 1 }
+
+lastSuccessCodeHCDM     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Response code from the last successful update HCP sent to Hitachi
+             Device Manager."
+          ::= { deviceMgrStats 2 }
+
+lastSuccessMessageHCDM  OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Response message from the last successful update HCP sent to Hitachi
+             Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrStats 3 }
+
+lastSuccessDetailsHCDM  OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Detailed response message from the last successful update sent to
+             Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrStats 4 }
+
+lastAttemptTimeHCDM     OBJECT-TYPE
+          SYNTAX        DateTime
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Date and time of the last attempt to send updated information to
+             Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrStats 5 }
+
+lastAttemptCodeHCDM     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Response code from the last attempt to send updated information to
+             Hitachi Device Manager."
+          ::= { deviceMgrStats 6 }
+
+lastAttemptMessageHCDM  OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Response message from the last attempt to send updated information to
+             Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrStats 7 }
+
+lastAttemptDetailsHCDM  OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Detailed response message from the last attempt to send updated
+             information to Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrStats 8 }
+
+
+-- Device Manager Stats
+enabledHCDM     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Enables (1) or disables (2) sending information to Hitachi Device
+             Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrSettings 1 }
+
+hostNameHCDM     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "IP address or hostname of the Hitachi Device Manager server.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrSettings 2 }
+
+hostUserNameHCDM     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Username for logging into Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrSettings 3 }
+
+hostPasswordHCDM     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Password for logging into Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrSettings 4 }
+
+availableFrequenciesHCDM     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "CSV list of frequency settings (in seconds) available for sending
+             updated information to Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrSettings 5 }
+
+frequencyHCDM       OBJECT-TYPE
+          SYNTAX        Integer32
+          MAX-ACCESS    read-write
+          STATUS        current
+          DESCRIPTION
+            "Sets the frequency (in seconds) with which HCP sends updated
+             information to Hitachi Device Manager.
+            (System Management Console:  Monitoring > HDvM)"
+          ::= { deviceMgrSettings 6 }
+
+
+-- External Logging Group
+externalLogging         OBJECT IDENTIFIER ::= { hcpMonitoring 3 }
+syslogSettings          OBJECT IDENTIFIER ::= { externalLogging 1 }
+
+syslogEnabled     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) log messages are being sent to
+             syslog servers.
+            (System Management Console:  Monitoring > Syslog)"
+          ::= { syslogSettings 1 }
+
+syslogServerList     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "CSV list of the IP addresses of syslog servers to send log messages to.
+            (System Management Console:  Monitoring > Syslog)"
+          ::= { syslogSettings 2 }
+
+syslogLevel     OBJECT-TYPE
+          SYNTAX        LongDisplayString(SIZE(0 .. 1024))
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Severity level of messages about unsecure events to send to syslog
+             servers.
+            (System Management Console:  Monitoring > Syslog)"
+          ::= { syslogSettings 3 }
+
+syslogSendSecurityEvents     OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) to send messages about secure
+             events to syslog servers.
+            (System Management Console:  Monitoring > Syslog)"
+          ::= { syslogSettings 4 }
+
+syslogSendComplianceEvents    OBJECT-TYPE
+          SYNTAX        INTEGER {
+                            yes(1),
+                            no(2)
+                        }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Indication of whether (1) or not (2) to send messages about compliance
+             events to syslog servers.
+            (System Management Console:  Monitoring > Syslog)"
+          ::= { syslogSettings 5 }
+
+syslogFacility  OBJECT-TYPE
+           SYNTAX       DisplayString
+           MAX-ACCESS   read-only
+           STATUS       current
+           DESCRIPTION
+             "Syslog facility to which log messages are directed.
+             (System Management Console:  Monitoring > Syslog)"
+           ::= { syslogSettings 6 }
+
+
+---------------------------------------------------------------------------------------
+--
+-- Nofications / Traps
+--
+---------------------------------------------------------------------------------------
+
+-- Notifications
+
+hcpAdminLogEvent  NOTIFICATION-TYPE
+    OBJECTS         { hcpAdminLogEventSeverity,
+                      hcpAdminLogEventTimestamp,
+                      hcpAdminLogEventType,
+                      hcpAdminLogEventShortName,
+                      hcpAdminLogEventMessage
+                    }
+    STATUS          current
+    DESCRIPTION     "The indicated event message was written to the HCP system log."
+    ::= { hcpNotifications 1 }
+
+hcpAdminEvent   OBJECT IDENTIFIER ::= { hcpAdminLogEvent 1 }
+
+hcpAdminLogEventSeverity OBJECT-TYPE
+          SYNTAX    INTEGER {
+                       error(3),
+                       warning(4),
+                       notice(5)
+                    }
+          MAX-ACCESS    read-only
+          STATUS        current
+          DESCRIPTION
+            "Severity of the event."
+          ::= { hcpAdminEvent 1 }
+
+hcpAdminLogEventTimestamp OBJECT-TYPE
+        SYNTAX      DateTime
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+          "Date and time at which the event occurred."
+        ::= { hcpAdminEvent 2 }
+
+hcpAdminLogEventType OBJECT-TYPE
+        SYNTAX      Integer32
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+          "Event ID."
+        ::= { hcpAdminEvent 3 }
+
+hcpAdminLogEventShortName OBJECT-TYPE
+        SYNTAX      LongDisplayString(SIZE(0 .. 1024))
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+          "Short description of the event."
+        ::= { hcpAdminEvent 4 }
+
+hcpAdminLogEventMessage OBJECT-TYPE
+        SYNTAX      LongDisplayString(SIZE(0 .. 1024))
+        MAX-ACCESS  read-only
+        STATUS      current
+        DESCRIPTION
+          "Full text of the message about the event."
+        ::= { hcpAdminEvent 5 }
+
+
+
+---------------------------------------------------------------------------------------
+--
+-- End of MIB
+--
+---------------------------------------------------------------------------------------
+
+-- Conformance information
+
+hcpMIBConformance OBJECT IDENTIFIER ::= { hcpMIB 1 }
+
+hcpMIBCompliances OBJECT IDENTIFIER ::= { hcpMIBConformance 1 }
+hcpMIBGroups      OBJECT IDENTIFIER ::= { hcpMIBConformance 2 }
+
+-- Compliance statements
+
+hcpMIBCompliance MODULE-COMPLIANCE
+    STATUS  current
+    DESCRIPTION
+      "The compliance statement for SNMPv2 entities that implement HCP."
+    MODULE  -- this module
+
+        MANDATORY-GROUPS { hcpGroup, hcpNotificationGroup }
+    ::= { hcpMIBCompliances 1 }
+
+-- units of conformance
+
+hcpGroup OBJECT-GROUP
+    OBJECTS   { nodeIP, nodeUsage, nodeAvailability, nodeCapacity, nodeBootTime, nodeStatus, nodeRestart,
+                    nodeShutdown, nodeType, nodeNicFailure, nodeSANStatus, nodeHardwareType, nodeNicDegraded,
+                ipmiTemperatureName, ipmiTemperatureDetailedStatus,
+                ipmiPowerSupplyName, ipmiPowerSupplyDetailedStatus,
+                ipmiFanName, ipmiFanDetailedStatus,
+                ipmiProcessorName, ipmiProcessorDetailedStatus,
+                ipmiVoltageName, ipmiVoltageDetailedStatus,
+                bbuBroken, bbuDiagnostics, bbuChargeStatus, bbuDegraded, bbuType,
+                adAccount, adCredentials, adConnectivity, adDisrupted, adSSLConnection,
+                storageNodeNumber, storageUsage, storageAvailability, storageCapacity,
+                    storageChannelUnit, storageStatus, volumeFeaturesValue, volumeFeaturesCsv,
+                    volumeSpinStateValue, volumeSpinStateString,
+                restart, shutdown,
+                tenantName, tenantDescription, tenantContactFirstName, tenantContactLastName,
+                    tenantAddressLineOne, tenantAddressLineTwo, tenantAddressCity, tenantAddressStateProvince,
+                    tenantAddressZipPostalCode, tenantAddressCountry, tenantPhone, tenantPhoneExtension,
+                    tenantEmailAddress, tenantAllowSearch, tenantAllowVersioning, tenantAllowRetentionModeSelection,
+                    tenantAllowReplication, tenantObjectsStored, tenantObjectsIndexed, tenantHardQuota, tenantSoftQuota,
+                    tenantAllocatedQuota, tenantPhysicalBytesUsed, tenantLogicalBytesUsed, nonReplicatedDpl1Namespace,
+                    tenantNamespaceQuota, tenantAuthentication, tenantManagementNetwork, tenantDataNetwork,
+                capacityBalancingStatus, capacityBalancingStatusTime,
+                compressionStatus, compressionStatusTime, compressionSpaceSaved, compressionPercentSpaceSaved,
+                    compressionObjectsCompressed, compressionRate, compressionAfterDays, compressionMinSizeKB,
+                    compressionExcludeList,
+                contentVerificationStatus, contentVerificationStatusTime, contentVerificationRepairMode,
+                identifyUnavailableObjectsDpl1UnavailableNode ,duplicateEliminationStatus, duplicateEliminationStatusTime,
+                duplicateEliminationNumObjectsMerged,
+                    duplicateEliminationNumBytesSaved,
+                garbageCollectionStatus, garbageCollectionStatusTime,
+                protectionStatus, protectionStatusTime,
+                replicationLinkName, replicationLinkId, replicationLinkRemoteHostnames,
+                    replicationLinkRemotePort, replicationLinkStatus, replicationLinkAuthoritative,
+                    replicationLinkSuspended, replicationLinkMaster, replicationLinkBacklogSeconds,
+                    replicationLinkBytes, replicationLinkBytesPerSecond, replicationLinkOperations,
+                    replicationLinkOperationsPerSecond, replicationLinkErrors, replicationLinkErrorsPerSecond,
+                    replicationLinkObjectsToBeReplicated, replicationLinkBytesToBeReplicated, replicationLinkNetwork,
+                scavengingStatus, scavengingStatusTime,
+                queryingConnectedSearch, indexingConnectedSearch, enabledSearchConsole, enabledSearchAPI,
+                    queryingEnabledSearch, indexingEnabledSearch, enabledSearchAdminUI, searchFacility,
+                    enabledMqeApi, enabledMqeIndexing, enabledMqeIndexingOfCustomMetadata, enabledHcpSearchApi,
+                    enabledHcpSearchFacilityAdminInterfaceAccess, enabledHcpSearchFacilityIndexing,
+                    enabledHcpSearchFacilityCustomMetadataIndexing,  
+                shreddingObjectCount, shreddingTotalObjectSizeBytes, shreddingRate, shreddingSendSyslogEvents,
+		migrationDescription, migrationState, migrationCompleteSize, migrationCompleteObjects,
+		migrationTotalSize, migrationTotalObjects, migrationRuntime, migrationRemainingTime,
+		storageTieringStatus, storageTieringStatusTime, dispositionStatus,  dispositionStatusTime,
+                dataAccessRead, dataAccessWrite, dataAccessDelete, dataAccessPurge, dataAccessPrivileged,
+                    dataAccessSearch,
+                sshEnabled, pingEnabled,
+                adEnabled, adDomainName, adComputerAccount, adOrganizationalUnit, adSSOConfiguredCorrectly, adComputerAccountExists,
+                hcpVersion, serialNumber, hcpMibVersion, currentTime, metricsTime, totalCapacity,
+                    protectedVolume, ingestedDataVolume, objectCount, indexedObjectCount, hcpStorageType, 
+                    replicationEnabled, searchEnabled, systemDplUnsafe, irreparableObjectsPresent,
+                    unavailableObjectsPresent, currentMQEIndexSize, hcpHotfixVersion, spindownStorageUsage,
+                    spindownStorageCapacity, indexingVolumesUsageByIndex, indexingVolumesUsageByOtherData,
+                    indexingVolumesCapacity, indexingTotalIndexVolumesCapacity, indexingTotalSharedVolumesCapacity,
+                    spindownTimePercentWeek, spindownTimePercentMonth, spindownTimePercentSixMonths,
+                    networkManagementEnabled,
+                backEndSwitchType, backEndSwitchIpAddress, backEndSwitchStatus,     
+                lastSuccessTimeHCDM, lastSuccessCodeHCDM, lastSuccessMessageHCDM, lastSuccessDetailsHCDM,
+                    lastAttemptTimeHCDM, lastAttemptCodeHCDM, lastAttemptMessageHCDM, lastAttemptDetailsHCDM,
+                enabledHCDM, hostNameHCDM, hostUserNameHCDM, hostPasswordHCDM, availableFrequenciesHCDM,
+                    frequencyHCDM,
+                syslogEnabled, syslogServerList, syslogLevel, syslogSendSecurityEvents, syslogSendComplianceEvents,
+                syslogFacility, hcpAdminLogEventSeverity, hcpAdminLogEventTimestamp, hcpAdminLogEventType,
+                    hcpAdminLogEventShortName, hcpAdminLogEventMessage
+              }
+    STATUS    current
+    DESCRIPTION
+      "The group of objects provided for management of HCP entities."
+    ::= { hcpMIBGroups 1 }
+
+
+hcpNotificationGroup NOTIFICATION-GROUP
+    NOTIFICATIONS { hcpAdminLogEvent }
+   STATUS        current
+   DESCRIPTION
+     "The group of notifications provided for management of HCP entities"
+    ::= { hcpMIBGroups 2 }
+
+END
