@@ -25,8 +25,10 @@ __version__ = '3.3'
 import os
 import sys
 import urwid
+import signal 
+import argparse
 
-DEBUG = False
+DEBUG = True
 WINDOWS = os.name == 'nt'
 
 STD_INPUT_HANDLE  = -10
@@ -35,45 +37,12 @@ STD_ERROR_HANDLE  = -12
 
 def debug(msg):
     if DEBUG:
-        print(msg)
+        with open('debug.log', 'a') as fi:
+            fi.write(msg + '\n')
 
-if WINDOWS:
-    # get console handle
-    from ctypes import windll, Structure, byref
-    try:
-        from ctypes.wintypes import SHORT, WORD, DWORD
-    # workaround for missing types in Python 2.5
-    except ImportError:
-        from ctypes import (
-            c_short as SHORT, c_ushort as WORD, c_ulong as DWORD)
-    console_handle = windll.kernel32.GetStdHandle(STD_OUTPUT_HANDLE)
-
-    # CONSOLE_SCREEN_BUFFER_INFO Structure
-    class COORD(Structure):
-        _fields_ = [("X", SHORT), ("Y", SHORT)]
-
-    class SMALL_RECT(Structure):
-        _fields_ = [("Left", SHORT), ("Top", SHORT),
-                    ("Right", SHORT), ("Bottom", SHORT)]
-
-    class CONSOLE_SCREEN_BUFFER_INFO(Structure):
-        _fields_ = [("dwSize", COORD),
-                    ("dwCursorPosition", COORD),
-                    ("wAttributes", WORD),
-                    ("srWindow", SMALL_RECT),
-                    ("dwMaximumWindowSize", DWORD)]
-
-def _windows_get_window_size():
-    """Return (width, height) of available window area on Windows.
-       (0, 0) if no console is allocated.
-    """
-    sbi = CONSOLE_SCREEN_BUFFER_INFO()
-    ret = windll.kernel32.GetConsoleScreenBufferInfo(console_handle, byref(sbi))
-    if ret == 0:
-        return (0, 0)
-    return (sbi.srWindow.Right - sbi.srWindow.Left + 1,
-            sbi.srWindow.Bottom - sbi.srWindow.Top + 1)
-
+def init_debug():
+    with open('debug.log', 'w') as fi:
+        fi.write('')
 
 def _posix_get_window_size():
     """Return (width, height) of console terminal on POSIX system.
@@ -113,9 +82,7 @@ def getwidth():
     *nix part uses termios ioctl TIOCGWINSZ call.
     """
     width = None
-    if WINDOWS:
-        return _windows_get_window_size()[0]
-    elif os.name == 'posix':
+    if os.name == 'posix':
         return _posix_get_window_size()[0]
     else:
         # 'mac', 'os2', 'ce', 'java', 'riscos' need implementations
@@ -131,17 +98,13 @@ def getheight():
     *nix part uses termios ioctl TIOCGWINSZ call.
     """
     height = None
-    if WINDOWS:
-        return _windows_get_window_size()[1]
-    elif os.name == 'posix':
+    if os.name == 'posix':
         return _posix_get_window_size()[1] - 1
     else:
         # 'mac', 'os2', 'ce', 'java', 'riscos' need implementations
         pass
 
     return height or 25
-
-
 
 def build_offsets(fi):
     offsets = []
@@ -158,84 +121,118 @@ focus_map = {
     'options': 'focus options',
     'line': 'focus line'}
 
-class HorizontalBoxes(urwid.Columns):
-    def __init__(self):
-        super(HorizontalBoxes, self).__init__([], dividechars=1)
+def handler(signum, frame):
+    print('Signal %s handled.' % signum)
+    raise urwid.ExitMainLoop()
 
-    def open_box(self, box):
-        if self.contents:
-            del self.contents[self.focus_position + 1:]
-        self.contents.append((urwid.AttrMap(box, 'options', focus_map),
-            self.options('given', 24)))
-        self.focus_position = len(self.contents) - 1
+class MultiPager():
+    
+    def __init__(self, files):
 
-class Pager():
+        DIV_CHAR = '-'
+        self.pagers = []
+        widgets = []
+        for file_path in files:
+            pager = Pager(file_path)
+            text_widget = urwid.Text(pager.get_page())
+            self.pagers.append((pager, text_widget))
+            widgets.append(urwid.Filler(text_widget))
+            widgets.append(('pack', urwid.Divider(DIV_CHAR)))
+        
+        self.window = urwid.Pile(widgets)
 
-    def __init__(self, fi):
-        self.fi = fi
-        self.marker = 0
-        self.offsets = build_offsets(fi)
-        self.txt = urwid.Text(self.get_page(self.fi, self.offsets, self.marker))
-        self.fill = urwid.Filler(self.txt, 'top')
+    def run(self):
+        urwid.MainLoop(self.window, unhandled_input=self.handle_input).run()
 
     def handle_input(self, key):
         if isinstance(key, str):
             if key.lower() == 'q':
                 raise urwid.ExitMainLoop()
-            if key == 'up' and self.marker >  0:
-                self.marker -= 1
-            if key == 'down' and self.marker < (len(self.offsets) - getheight()):
-                self.marker += 1
+            if key == 'up':
+                for pager, widget in self.pagers:
+                    pager.up()
+            if key == 'down':
+                for pager, widget in self.pagers:
+                    pager.down()
             if key == 'page up':
-                # don't try to go up beyond start
-                self.marker = max(0, self.marker - getheight())
+                for pager, widget in self.pagers:
+                    pager.page_up()
             if key == 'page down':
-                # don't try to go down beyond end
-                self.marker = min(len(self.offsets) - getheight(), self.marker + getheight())
+                for pager, widget in self.pagers:
+                    pager.page_down()
             if key == 'home':
-                self.marker = 0
+                for pager, widget in self.pagers:
+                    pager.home()
             if key == 'end':
-                self.marker = len(self.offsets) - getheight()
-            
-        self.txt.set_text(self.get_page(self.fi, self.offsets, self.marker))
+                for pager, widget in self.pagers:
+                    pager.end()
 
-    def get_page(self, fi, offsets, marker):
+        for pager, widget in self.pagers:
+            debug("Marker: %s" % pager.marker)
+            widget.set_text(pager.get_page())
 
+class Pager():
+
+    def __init__(self, file_handle):
+
+        import codecs
+        self.marker = 0
+        self.fi = codecs.open(file_handle)
+        self.offsets = build_offsets(self.fi)
+
+    def get_page(self):
         """
         """
-        debug('-------- MARKER %s -----------' % marker)
-        
         lines = []
 	height = getheight()
-        fi.seek(offsets[marker])
-        end = marker + height
-        while marker < (end):
-            line = fi.readline() #.rstrip("\n\r")
-            if not DEBUG:
-                lines.append(line)
-            marker += 1
-        debug("Printed %s lines" % marker)
+        self.fi.seek(self.offsets[self.marker])
+        end = self.marker + height
+        current = self.marker
+        while current < end:
+            line = self.fi.readline()
+            # urwid.Text does not handle tabs well
+            line = line.replace('\t', '    ')
+            lines.append(line)
+            current += 1
         return lines
 
-    def run(self):
-        loop = urwid.MainLoop(self.fill, unhandled_input=self.handle_input)
-        loop.run()
+    def up(self):
+        if self.marker >  0:
+           self.marker -= 1
 
+    def down(self):
+        if self.marker < (len(self.offsets) - getheight()):
+            self.marker += 1
 
-def main(fi):
-    pager = Pager(fi)
-    pager.run()
+    def page_up(self):
 
+        # don't try to go up beyond start
+        self.marker = max(0, self.marker - getheight())
+
+    def page_down(self):
+        # don't try to go down beyond end
+        self.marker = min(len(self.offsets) - getheight(), self.marker + getheight())
+
+    def home(self):
+        self.marker = 0
+
+    def end(self):
+        self.marker = len(self.offsets) - getheight()
+
+def main(files):
+
+    # Exit cleanly on ctrl-c
+    signal.signal(signal.SIGINT , handler)
+    if DEBUG:
+        init_debug()
+    # Start the application
+    MultiPager(files).run()
 
 if __name__ == '__main__':
-    # check if pager.py is running in interactive mode
-    # (without stdin redirection)
-    with open(sys.argv[1]) as fi:
-        main(fi)
 
-    # [ ] check piped stdin in Linux
-    #main(cStringIO.StringIO(sys.stdin))
+    parser = argparse.ArgumentParser('Multi-Log Viewer')
+    parser.add_argument('files', nargs='*')
+    args = parser.parse_args()
 
-# [ ] add 'q', Ctrl-C and ESC handling to default pager prompt
-#     (as of 3.1 Windows aborts only on Ctrl-Break)
+    main(args.files)
 
