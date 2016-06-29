@@ -1,7 +1,5 @@
 #!/usr/bin/env python
 
-from __future__ import print_function
-
 """
 Page output and find dimensions of console.
 
@@ -28,7 +26,7 @@ import urwid
 import signal 
 import argparse
 
-DEBUG = True
+DEBUG = False
 WINDOWS = os.name == 'nt'
 
 STD_INPUT_HANDLE  = -10
@@ -116,11 +114,6 @@ def build_offsets(fi):
     fi.seek(original)
     return offsets 
 
-focus_map = {
-    'heading': 'focus heading',
-    'options': 'focus options',
-    'line': 'focus line'}
-
 def handler(signum, frame):
     print('Signal %s handled.' % signum)
     raise urwid.ExitMainLoop()
@@ -175,9 +168,8 @@ class Pager():
 
     def __init__(self, file_handle):
 
-        import codecs
         self.marker = 0
-        self.fi = codecs.open(file_handle)
+        self.fi = open(file_handle)
         self.offsets = build_offsets(self.fi)
 
     def get_page(self):
@@ -190,7 +182,7 @@ class Pager():
         current = self.marker
         while current < end:
             line = self.fi.readline()
-            # urwid.Text does not handle tabs well
+            # urwid.Text cannot handle tabs
             line = line.replace('\t', '    ')
             lines.append(line)
             current += 1
@@ -221,18 +213,21 @@ class Pager():
 
 def main(files):
 
-    # Exit cleanly on ctrl-c
-    signal.signal(signal.SIGINT , handler)
     if DEBUG:
         init_debug()
+    # Exit cleanly on ctrl-c
+    signal.signal(signal.SIGINT , handler)
     # Start the application
     MultiPager(files).run()
 
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser('Multi-Log Viewer')
-    parser.add_argument('files', nargs='*')
+    parser.add_argument('file', nargs='*', help='file path(s)')
     args = parser.parse_args()
 
-    main(args.files)
+    if not args.file:
+        parser.print_help()
+        sys.exit(1)
+    main(args.file)
 
