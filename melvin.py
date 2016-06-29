@@ -1,24 +1,11 @@
 #!/usr/bin/env python
 
 """
-Page output and find dimensions of console.
+Page multiple files in the same terminal.
 
-This module deals with paging on Linux terminals and Windows consoles in
-a cross-platform way. The major difference for paging here is line ends.
-Not line end characters, but the console behavior when the last character
-on a line is printed.  To get technical details, run this module without
-parameters::
-
-  python pager.py
-
-Author:  anatoly techtonik <techtonik@gmail.com>
-License: Public Domain (use MIT if the former doesn't work for you)
 """
 
-# [ ] measure performance of keypresses in console (Linux, Windows, ...)
-# [ ] define CAPS LOCK strategy (lowercase) and keyboard layout issues
-
-__version__ = '3.3'
+__version__ = '0.1'
 
 import os
 import sys
@@ -28,10 +15,6 @@ import argparse
 
 DEBUG = False
 WINDOWS = os.name == 'nt'
-
-STD_INPUT_HANDLE  = -10
-STD_OUTPUT_HANDLE = -11
-STD_ERROR_HANDLE  = -12
 
 def debug(msg):
     if DEBUG:
