@@ -108,6 +108,7 @@ class MultiPager():
         
         self.window = urwid.Pile(widgets)
 
+
     def run(self):
         urwid.MainLoop(self.window, unhandled_input=self.handle_input).run()
 
@@ -133,7 +134,10 @@ class MultiPager():
             if key == 'end':
                 for pager, widget in self.pagers:
                     pager.end()
-            
+            if key == '/':
+                self.window.contents.append((urwid.Edit(), ('pack', None)))
+            if key == 'tab':
+                self.window.focus_position = (self.window.focus_position + 1) % len(self.window.contents)
 
         for pager, widget in self.pagers:
             widget.set_text(pager.get_page())
