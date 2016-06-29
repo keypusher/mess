@@ -5,7 +5,7 @@ Page multiple files in the same terminal.
 
 """
 
-__version__ = '0.1'
+__version__ = '0.2'
 
 import os
 import sys
@@ -13,13 +13,13 @@ import urwid
 import signal 
 import argparse
 
-DEBUG = False
+DEBUG = True
 WINDOWS = os.name == 'nt'
 
 def debug(msg):
     if DEBUG:
         with open('debug.log', 'a') as fi:
-            fi.write(msg + '\n')
+            fi.write(msg.rstrip() + '\n')
 
 def init_debug():
     with open('debug.log', 'w') as fi:
@@ -87,16 +87,6 @@ def getheight():
 
     return height or 25
 
-def build_offsets(fi):
-    offsets = []
-    offset = 0
-    original = fi.tell()
-    for line in fi:
-        offsets.append(offset)
-        offset += len(line)
-    fi.seek(original)
-    return offsets 
-
 def handler(signum, frame):
     print('Signal %s handled.' % signum)
     raise urwid.ExitMainLoop()
@@ -108,8 +98,9 @@ class MultiPager():
         DIV_CHAR = '-'
         self.pagers = []
         widgets = []
+        rows = getheight() / len(files)
         for file_path in files:
-            pager = Pager(file_path)
+            pager = Pager(file_path, rows)
             text_widget = urwid.Text(pager.get_page())
             self.pagers.append((pager, text_widget))
             widgets.append(urwid.Filler(text_widget))
@@ -142,57 +133,99 @@ class MultiPager():
             if key == 'end':
                 for pager, widget in self.pagers:
                     pager.end()
+            
 
         for pager, widget in self.pagers:
-            debug("Marker: %s" % pager.marker)
             widget.set_text(pager.get_page())
+
 
 class Pager():
 
-    def __init__(self, file_handle):
+    def __init__(self, file_path, rows):
 
         self.marker = 0
-        self.fi = open(file_handle)
-        self.offsets = build_offsets(self.fi)
+        self.rows = rows
+        self.file_path = file_path
+        self.fi = open(file_path)
+        self.last_page = self.find_end()
+
+    def get_rows(self):
+        return self.rows
 
     def get_page(self):
         """
         """
+        if DEBUG:
+            debug('------- PAGE (%s) --------' % self.marker)
         lines = []
-	height = getheight()
-        self.fi.seek(self.offsets[self.marker])
-        end = self.marker + height
-        current = self.marker
-        while current < end:
+	height = self.get_rows()
+        self.fi.seek(self.marker)
+        current = 0
+        while current < height:
             line = self.fi.readline()
+            current += 1
             # urwid.Text cannot handle tabs
             line = line.replace('\t', '    ')
             lines.append(line)
-            current += 1
+            if DEBUG:
+                debug(line)
+        self.fi.seek(self.marker)
         return lines
 
+    def find_end(self):
+        """ calculate the last valid file offset such that we can 
+            still display a full page.
+        """
+        original = self.marker
+        self.fi.seek(self.size())
+        self.marker = self.fi.tell()
+        for i in range(self.get_rows()):
+            self.up()
+        end = self.marker
+        self.marker = original
+        debug("End for %s: %s" % (self.file_path, end))
+        return end
+
+    def size(self):
+        return os.path.getsize(self.file_path)
+
     def up(self):
-        if self.marker >  0:
-           self.marker -= 1
+        previous_line = reverse_readline(self.fi, self.marker)
+        self.marker -= len(previous_line) + 1
+        self.marker = max(0, self.marker)
 
     def down(self):
-        if self.marker < (len(self.offsets) - getheight()):
-            self.marker += 1
+        next_line = self.fi.readline()
+        self.marker += len(next_line)
+        self.marker = min(self.last_page, self.marker)
 
     def page_up(self):
-
-        # don't try to go up beyond start
-        self.marker = max(0, self.marker - getheight())
+        for i in range(self.get_rows()):
+            self.up()
 
     def page_down(self):
-        # don't try to go down beyond end
-        self.marker = min(len(self.offsets) - getheight(), self.marker + getheight())
+        for i in range(self.get_rows()):
+            self.down()
 
     def home(self):
         self.marker = 0
 
     def end(self):
-        self.marker = len(self.offsets) - getheight()
+        self.marker = self.size()
+        self.page_up()
+
+def reverse_readline(fh, start_pos, buf_size=8192):
+    """returns the previous line of the file"""
+    fh.seek(start_pos)
+    remaining_size = fh.tell()
+    chunk_size = min(remaining_size, buf_size)
+    fh.seek(remaining_size - chunk_size)
+    buff = fh.read(chunk_size)
+    lines = buff.split('\n')
+    if not lines:
+        return ''
+    else:
+        return lines[-1]
 
 def main(files):
 
