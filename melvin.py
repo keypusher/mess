@@ -95,7 +95,7 @@ class MultiPager():
     
     def __init__(self, files):
 
-        DIV_CHAR = '-'
+        DIV_CHAR = '_'
         self.pagers = []
         widgets = []
         rows = getheight() / len(files)
@@ -135,12 +135,25 @@ class MultiPager():
                 for pager, widget in self.pagers:
                     pager.end()
             if key == '/':
-                self.window.contents.append((urwid.Edit(), ('pack', None)))
+                searchBox = (SearchBox(), ('pack', None))
+                self.window.contents.append(searchBox)
+                self.window.focus_position = len(self.window.contents) - 1
             if key == 'tab':
                 self.window.focus_position = (self.window.focus_position + 1) % len(self.window.contents)
 
         for pager, widget in self.pagers:
             widget.set_text(pager.get_page())
+
+class SearchBox(urwid.Edit):
+
+    def __init__(self, callback):
+        super(SearchBox, self).__init__()
+
+    def keypress(self, size, key):
+        if key == 'enter':
+            text, _ = self.get_text()
+            debug("SEARCH: %s" % text)
+        super(SearchBox, self).keypress(size, key)
 
 
 class Pager():
