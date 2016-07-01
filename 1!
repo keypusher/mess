@@ -96,6 +96,7 @@ class MultiPager():
     
     def __init__(self, files):
 
+
         #DIV_CHAR = '_'
         self.pagers = []
         widgets = []
@@ -105,8 +106,8 @@ class MultiPager():
             pager = Pager(file_path, rows)
             pager_ui = PagerUI(pager)
             self.pagers.append((pager, pager_ui))
-            widgets.append(('weight', 1, pager_ui))
-        #searchBox = SearchBox(self.search)
+            widgets.append(('pack', pager_ui))
+        searchBox = SearchBox(self.search)
         #widgets.append(('weight', 1, searchBox))
         self.window = urwid.Pile(widgets)
 
@@ -143,7 +144,7 @@ class MultiPager():
                 for pager, widget in self.pagers:
                     pager.end()
             if key == '/':
-                self.window.focus.add_search()
+                pass
             if key == 'tab':
                 self.window.focus.hide_focus()
                 self.window.focus_position = (self.window.focus_position + 1) % len(self.window.contents)
@@ -158,9 +159,8 @@ class PagerUI(urwid.LineBox):
     def __init__(self, pager):
         self.pager = pager
         self.text = urwid.Text(self.pager.get_page())
-        self.pile = urwid.Pile([('pack', self.text)])
-        super(PagerUI, self).__init__(self.pile, self.pager.file_path)
-
+        super(PagerUI, self).__init__(self.text, self.pager.file_path)
+    
     def set_text(self, text):
         self.text.set_text(text)
 
@@ -173,20 +173,13 @@ class PagerUI(urwid.LineBox):
     def refresh(self):
         self.text.set_text(self.pager.get_page())
 
-    def add_search(self):
-        #self.pile.contents.append((SearchBox(self.search), ('weight', 1)))
-        debug('adding search')
-        edit = urwid.LineBox(urwid.Edit('test'))
-        self.pile.contents.append((edit, ('weight', 1)))
-        self.pile.focus_position = self.pile.focus_position + 1
-
     def search(self, text):
         debug("SEARCH (%s): %s" % (self.pager.file_path, text))
         offsets = []
         try: 
             results = subprocess.check_output(['grep', '-b', text, self.pager.file_path])
             debug(results)
-            # comes back with byte-offset and line text, ie:
+            # comes back with byte-offset and text match, ie:
             # "4201: 'name' : 'FOO'
             # "6814: 'name' : 'FOOBAR'
 
@@ -213,8 +206,10 @@ class SearchBox(urwid.Edit):
         if key == 'enter':
             text, _ = self.get_text()
             self.search_callback(text)
+            return None
         if key == 'esc':
             self.exit_callback()
+            return None
         if key == 'tab':
             return key
         super(SearchBox, self).keypress(size, key)
@@ -247,8 +242,8 @@ class Pager():
             # urwid.Text cannot handle tabs
             line = line.replace('\t', '    ')
             lines.append(line)
-            #if DEBUG:
-            #    debug(line)
+            if DEBUG:
+                debug(line)
         self.fi.seek(self.marker)
         return lines
 
@@ -304,7 +299,6 @@ def reverse_readline(fh, start_pos, buf_size=8192):
     lines = buff.split('\n')
     if not lines:
         return ''
-
     else:
         return lines[-1]
 

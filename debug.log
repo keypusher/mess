@@ -1,149 +1,50 @@
-End for /data/sustaining/replica.replication: 9681
+End for /data/sustaining/replica.replication: 9730
 ------- PAGE (0) --------
-{
-    'c801713a-5319-4625-8b2e-854374512d9a' : {
-        'autoFailBackMaster' : False,
-        'autoFailBackMasterThreshold' : '10',
-        'autoFailBackNonMaster' : False,
-        'autoFailBackNonMasterThreshold' : '10',
-        'autoFailOverMaster' : False,
-        'autoFailOverMasterThreshold' : '120',
-        'autoFailOverNonMaster' : False,
-        'autoFailOverNonMasterThreshold' : '120',
-        'currentPerformanceLevel' : 'MEDIUM',
-        'inboundContentSelections' : {
-        },
-        'lastNegotiatedVersion' : '710',
-        'linkDescription' : '',
-        'linkId' : 'c801713a-5319-4625-8b2e-854374512d9a',
-        'linkName' : 'lclq9bhcp01_lclkdchcp01',
-End for /data/sustaining/replica.efs: 3299075864
+End for /data/sustaining/replica.efs: 3299076322
 ------- PAGE (0) --------
-(1000000098, 537451661, '26157117358.tar', '/2011193/26157117358/', 90933833441409L, '61a65617-391b-4e35-b290-414896936661', 169, -1)
-(1000000104, 206569929, '180868717039.tar', '/2013122/180868717039/', 91774310938113L, '61a65617-391b-4e35-b290-414896936661', 166, -1)
-(1000000173, 224164847, '250670631189.tar', '/2008264/250670631189/', 91651910846529L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000000393, 92621273, '33041533909.tar', '/2012300/33041533909/', 91768683930753L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000000421, 1016670812, '01010101254.tar', '/2008191/01010101254/', 91392830645185L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000000466, 542776046, '14086986762.tar', '/2008181/14086986762/', 91651587615745L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000000574, 578254893, '31038177905.tar', '/2010019/31038177905/', 91685488237889L, '61a65617-391b-4e35-b290-414896936661', 169, -1)
-(1000000728, 844399941, '03085627920.tar', '/2012284/03085627920/', 91768717175873L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000000823, 233074068, '260158419463.tar', '/2008355/260158419463/', 91651097321601L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(100000162, 930667717, '240816812385.tar', '/2009280/240816812385/', 91579873630081L, '61a65617-391b-4e35-b290-414896936661', 170, -1)
-(1000001684, 533454, '330427030560.tar', '/2012041/330427030560/', 91723086418113L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000001713, 260547091, '080063530759.tar', '/2010012/080063530759/', 91685614776321L, '61a65617-391b-4e35-b290-414896936661', 169, -1)
-(1000001742, 819579481, '110392631352.tar', '/2008175/110392631352/', 91651579433473L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000001928, 575920102, '140800727451.tar', '/2012313/140800727451/', 91768593726529L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000002097, 840497122, '260155716497.tar', '/2009109/260155716497/', 91656844021057L, '61a65617-391b-4e35-b290-414896936661', 170, -1)
-(1000002378, 123059072, '27085749508.tar', '/2008286/27085749508/', 91652219483585L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000002510, 690317937, '080032916931.tar', '/2012242/080032916931/', 91768877354369L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-End for /data/sustaining/replica.replication: 9681
+End for /data/sustaining/primary.retention: 2551
 ------- PAGE (0) --------
-{
-    'c801713a-5319-4625-8b2e-854374512d9a' : {
-        'autoFailBackMaster' : False,
-        'autoFailBackMasterThreshold' : '10',
-        'autoFailBackNonMaster' : False,
-        'autoFailBackNonMasterThreshold' : '10',
-        'autoFailOverMaster' : False,
-        'autoFailOverMasterThreshold' : '120',
-        'autoFailOverNonMaster' : False,
-        'autoFailOverNonMasterThreshold' : '120',
-        'currentPerformanceLevel' : 'MEDIUM',
-        'inboundContentSelections' : {
-        },
-        'lastNegotiatedVersion' : '710',
-        'linkDescription' : '',
-        'linkId' : 'c801713a-5319-4625-8b2e-854374512d9a',
-        'linkName' : 'lclq9bhcp01_lclkdchcp01',
-End for /data/sustaining/primary.retention: 2454
+End for debug.log: 0
 ------- PAGE (0) --------
-{
-        '123' : {
-                'uuid' : '00000000-0000-0000-0000-000000000001',
-                'name' : 'OPTIM_QA_Objects',
-                'duration' : 'A+6M',
-                'autodelete' : True,
-                'comment' : ''
-        },
-        '124' : {
-                'uuid' : '00000000-0000-0000-0000-000000000001',
-                'name' : 'OPTIM_PR_Objects',
-                'duration' : '0',
-                'autodelete' : False,
-                'comment' : 'Temporary setting for testing - INC000017317769'
-        },
-        '126' : {
-                'uuid' : '00000000-0000-0000-0000-000000000001',
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
 ------- PAGE (0) --------
-{
-    'c801713a-5319-4625-8b2e-854374512d9a' : {
-        'autoFailBackMaster' : False,
-        'autoFailBackMasterThreshold' : '10',
-        'autoFailBackNonMaster' : False,
-        'autoFailBackNonMasterThreshold' : '10',
-        'autoFailOverMaster' : False,
-        'autoFailOverMasterThreshold' : '120',
-        'autoFailOverNonMaster' : False,
-        'autoFailOverNonMasterThreshold' : '120',
-        'currentPerformanceLevel' : 'MEDIUM',
-        'inboundContentSelections' : {
-        },
-        'lastNegotiatedVersion' : '710',
-        'linkDescription' : '',
-        'linkId' : 'c801713a-5319-4625-8b2e-854374512d9a',
-        'linkName' : 'lclq9bhcp01_lclkdchcp01',
 ------- PAGE (0) --------
-(1000000098, 537451661, '26157117358.tar', '/2011193/26157117358/', 90933833441409L, '61a65617-391b-4e35-b290-414896936661', 169, -1)
-(1000000104, 206569929, '180868717039.tar', '/2013122/180868717039/', 91774310938113L, '61a65617-391b-4e35-b290-414896936661', 166, -1)
-(1000000173, 224164847, '250670631189.tar', '/2008264/250670631189/', 91651910846529L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000000393, 92621273, '33041533909.tar', '/2012300/33041533909/', 91768683930753L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000000421, 1016670812, '01010101254.tar', '/2008191/01010101254/', 91392830645185L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000000466, 542776046, '14086986762.tar', '/2008181/14086986762/', 91651587615745L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000000574, 578254893, '31038177905.tar', '/2010019/31038177905/', 91685488237889L, '61a65617-391b-4e35-b290-414896936661', 169, -1)
-(1000000728, 844399941, '03085627920.tar', '/2012284/03085627920/', 91768717175873L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000000823, 233074068, '260158419463.tar', '/2008355/260158419463/', 91651097321601L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(100000162, 930667717, '240816812385.tar', '/2009280/240816812385/', 91579873630081L, '61a65617-391b-4e35-b290-414896936661', 170, -1)
-(1000001684, 533454, '330427030560.tar', '/2012041/330427030560/', 91723086418113L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000001713, 260547091, '080063530759.tar', '/2010012/080063530759/', 91685614776321L, '61a65617-391b-4e35-b290-414896936661', 169, -1)
-(1000001742, 819579481, '110392631352.tar', '/2008175/110392631352/', 91651579433473L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000001928, 575920102, '140800727451.tar', '/2012313/140800727451/', 91768593726529L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
-(1000002097, 840497122, '260155716497.tar', '/2009109/260155716497/', 91656844021057L, '61a65617-391b-4e35-b290-414896936661', 170, -1)
-(1000002378, 123059072, '27085749508.tar', '/2008286/27085749508/', 91652219483585L, '61a65617-391b-4e35-b290-414896936661', 171, -1)
-(1000002510, 690317937, '080032916931.tar', '/2012242/080032916931/', 91768877354369L, '61a65617-391b-4e35-b290-414896936661', 167, -1)
 ------- PAGE (0) --------
-{
-    'c801713a-5319-4625-8b2e-854374512d9a' : {
-        'autoFailBackMaster' : False,
-        'autoFailBackMasterThreshold' : '10',
-        'autoFailBackNonMaster' : False,
-        'autoFailBackNonMasterThreshold' : '10',
-        'autoFailOverMaster' : False,
-        'autoFailOverMasterThreshold' : '120',
-        'autoFailOverNonMaster' : False,
-        'autoFailOverNonMasterThreshold' : '120',
-        'currentPerformanceLevel' : 'MEDIUM',
-        'inboundContentSelections' : {
-        },
-        'lastNegotiatedVersion' : '710',
-        'linkDescription' : '',
-        'linkId' : 'c801713a-5319-4625-8b2e-854374512d9a',
-        'linkName' : 'lclq9bhcp01_lclkdchcp01',
 ------- PAGE (0) --------
-{
-        '123' : {
-                'uuid' : '00000000-0000-0000-0000-000000000001',
-                'name' : 'OPTIM_QA_Objects',
-                'duration' : 'A+6M',
-                'autodelete' : True,
-                'comment' : ''
-        },
-        '124' : {
-                'uuid' : '00000000-0000-0000-0000-000000000001',
-                'name' : 'OPTIM_PR_Objects',
-                'duration' : '0',
-                'autodelete' : False,
-                'comment' : 'Temporary setting for testing - INC000017317769'
-        },
-        '126' : {
-                'uuid' : '00000000-0000-0000-0000-000000000001',
-SEARCHING: (u'asdasdasd', [])
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+Handle Key: tab
+Focus: <PagerUI box/flow widget <Pile box/flow widget>>
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
+------- PAGE (0) --------
