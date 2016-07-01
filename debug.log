@@ -1,50 +1,10 @@
-End for /data/sustaining/replica.replication: 9730
+End for /data/sustaining/replica.replication: 9681
 ------- PAGE (0) --------
-End for /data/sustaining/replica.efs: 3299076322
+End for /data/sustaining/replica.efs: 3299075864
 ------- PAGE (0) --------
-End for /data/sustaining/primary.retention: 2551
+End for /data/sustaining/primary.retention: 2454
 ------- PAGE (0) --------
 End for debug.log: 0
 ------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-Handle Key: tab
-Focus: <PagerUI box/flow widget <Pile box/flow widget>>
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
-------- PAGE (0) --------
+Handle Key: /
+adding search

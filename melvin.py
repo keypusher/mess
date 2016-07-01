@@ -99,7 +99,7 @@ class MultiPager():
         #DIV_CHAR = '_'
         self.pagers = []
         widgets = []
-        rows = ((getheight() + 1) / len(files)) - 3
+        rows = ((getheight() + 1) / len(files))
         self.search = None
         for file_path in files:
             pager = Pager(file_path, rows)
@@ -158,8 +158,8 @@ class PagerUI(urwid.LineBox):
     def __init__(self, pager):
         self.pager = pager
         self.text = urwid.Text(self.pager.get_page())
-        self.pile = urwid.Pile([('pack', self.text)])
-        super(PagerUI, self).__init__(self.pile, self.pager.file_path)
+        self.filler = urwid.Filler(urwid.Pile([('pack', self.text)]))
+        super(PagerUI, self).__init__(self.filler, self.pager.file_path)
 
     def set_text(self, text):
         self.text.set_text(text)
@@ -176,9 +176,13 @@ class PagerUI(urwid.LineBox):
     def add_search(self):
         #self.pile.contents.append((SearchBox(self.search), ('weight', 1)))
         debug('adding search')
-        edit = urwid.LineBox(urwid.Edit('test'))
-        self.pile.contents.append((edit, ('weight', 1)))
+        #edit = urwid.LineBox(urwid.Edit('test'))
+        edit = urwid.Filler(urwid.LineBox(SearchBox(self.search, self.remove_search)))
+        self.pile.contents.append((edit, ('weight', 2)))
         self.pile.focus_position = self.pile.focus_position + 1
+
+    def remove_search(self):
+        self.pile.contents.pop()
 
     def search(self, text):
         debug("SEARCH (%s): %s" % (self.pager.file_path, text))
@@ -200,13 +204,15 @@ class PagerUI(urwid.LineBox):
         if offsets:
             self.pager.marker = offsets[0]
             self.refresh()
+            self.remove_search()
         debug("Matching search offsets: %s" % offsets)
         return offsets
 
 class SearchBox(urwid.Edit):
 
-    def __init__(self, search_callback):
+    def __init__(self, search_callback, exit_callback):
         self.search_callback = search_callback
+        self.exit_callback = exit_callback
         super(SearchBox, self).__init__()
 
     def keypress(self, size, key):
